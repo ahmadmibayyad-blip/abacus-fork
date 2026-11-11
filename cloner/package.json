@@ -1,0 +1,9 @@
+{
+  "name": "cloner-renderer",
+  "private": true,
+  "description": "HyperFrames renderer used by Cloner",
+  "dependencies": {
+    "@expo-google-fonts/poppins": "^0.4.1",
+    "hyperframes": "0.9.32"
+  }
+}
