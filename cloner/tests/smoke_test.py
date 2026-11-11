@@ -47,7 +47,7 @@ ADS = [
      "copy": {"primary_text": "1 acheté, 1 offert", "headline": "Legging", "description": "", "cta": "Shop now"},
      "library_url": "https://www.facebook.com/ads/library/?id=222"},
 ]
-sources.fetch_ads = lambda url, n: ADS[:n]
+sources.fetch_ads = lambda url, n, raw_path=None: ADS[:n]
 sources.download = lambda url, dest: dest.write_bytes((VIDEO if url == "video" else IMAGE).read_bytes()) or dest
 voice.transcribe = lambda p: {"language": "fr", "text": "Tu commandes un legging, on t'en envoie un deuxième gratuit.", "words": []}
 

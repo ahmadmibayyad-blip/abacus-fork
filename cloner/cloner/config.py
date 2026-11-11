@@ -29,7 +29,7 @@ def _dotenv() -> dict:
     out = {}
     f = ROOT / ".env"
     if f.exists():
-        for line in f.read_text().splitlines():
+        for line in f.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 k, v = line.split("=", 1)
@@ -40,7 +40,7 @@ def _dotenv() -> dict:
 def _saved() -> dict:
     if SETTINGS_FILE.exists():
         try:
-            return json.loads(SETTINGS_FILE.read_text())
+            return json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             return {}
     return {}
@@ -63,7 +63,7 @@ def save(values: dict) -> None:
                 cur.pop(k, None)
             else:
                 cur[k] = v
-    SETTINGS_FILE.write_text(json.dumps(cur, indent=2))
+    SETTINGS_FILE.write_text(json.dumps(cur, indent=2), encoding="utf-8")
     try:
         os.chmod(SETTINGS_FILE, 0o600)
     except OSError:

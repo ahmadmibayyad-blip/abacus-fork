@@ -34,14 +34,14 @@ def job_dir(job_id: str) -> Path:
 
 def load(job_id: str) -> dict:
     with _lock:
-        return json.loads((job_dir(job_id) / "job.json").read_text())
+        return json.loads((job_dir(job_id) / "job.json").read_text(encoding="utf-8"))
 
 
 def save(job: dict) -> None:
     with _lock:
         p = job_dir(job["id"]) / "job.json"
         tmp = p.with_suffix(".tmp")
-        tmp.write_text(json.dumps(job, indent=2, ensure_ascii=False))
+        tmp.write_text(json.dumps(job, indent=2, ensure_ascii=False), encoding="utf-8")
         tmp.replace(p)
 
 
@@ -63,7 +63,7 @@ def list_jobs() -> list[dict]:
     for d in sorted(JOBS_DIR.iterdir(), reverse=True):
         f = d / "job.json"
         if f.exists():
-            j = json.loads(f.read_text())
+            j = json.loads(f.read_text(encoding="utf-8"))
             out.append({k: j.get(k) for k in ("id", "created", "status", "error", "input")} |
                        {"ads": len(j.get("ads", [])), "done": sum(a.get("status") == "done" for a in j.get("ads", []))})
     out.sort(key=lambda j: j["created"], reverse=True)
@@ -143,7 +143,8 @@ def queue_rerender(job_id: str, idx: int, payload: dict) -> None:
 def _run_library(job_id: str) -> None:
     job = load(job_id)
     update(job_id, lambda j: j.update(status="running", step="Fetching ads from the Ad Library"))
-    ads = sources.fetch_ads(job["input"]["url"], int(job["input"].get("count", 3)))
+    ads = sources.fetch_ads(job["input"]["url"], int(job["input"].get("count", 3)),
+                            raw_path=job_dir(job_id) / "apify_response.json")
     records = [_ad_record(i, a) for i, a in enumerate(ads)]
     update(job_id, lambda j: j.update(ads=records))
     for i, a in enumerate(records):
@@ -237,7 +238,7 @@ def _video(job_id: str, i: int, fresh: bool) -> None:
             set_ad(job_id, i, step="Transcribing the original voiceover")
             t = voice.transcribe(media.extract_audio(src, d / "audio.wav"))
             transcript = t["text"]
-            (d / "transcript.json").write_text(json.dumps(t, ensure_ascii=False, indent=1))
+            (d / "transcript.json").write_text(json.dumps(t, ensure_ascii=False, indent=1), encoding="utf-8")
         set_ad(job_id, i, step="Claude is watching the ad and writing the new script", progress=15)
         frames = media.sample_frames(src, d / "frames", n=6)
         plan = ai.plan_video(transcript, frames, a["src_copy"], info["duration"], opts).model_dump()
@@ -313,11 +314,11 @@ def start_worker() -> None:
     for d in JOBS_DIR.iterdir():
         f = d / "job.json"
         if f.exists():
-            j = json.loads(f.read_text())
+            j = json.loads(f.read_text(encoding="utf-8"))
             if j.get("status") in ("queued", "running"):
                 j["status"], j["error"] = "error", "Cloner was restarted while this job ran."
                 for a in j.get("ads", []):
                     if a.get("status") in ("queued", "running"):
                         a["status"], a["error"] = "error", "Interrupted by restart; press Re-render."
-                f.write_text(json.dumps(j, indent=2, ensure_ascii=False))
+                f.write_text(json.dumps(j, indent=2, ensure_ascii=False), encoding="utf-8")
     threading.Thread(target=_worker, daemon=True).start()

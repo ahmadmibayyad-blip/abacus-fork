@@ -34,7 +34,7 @@ class JobIn(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
-    return (config.STATIC / "index.html").read_text()
+    return (config.STATIC / "index.html").read_text(encoding="utf-8")
 
 
 @app.get("/api/health")

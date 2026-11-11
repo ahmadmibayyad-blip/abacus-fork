@@ -239,6 +239,7 @@ async function showJob(id) {
   clearTimeout(pollTimer);
   let job;
   try { job = await api(`/api/jobs/${id}`); } catch { $("#jobview").innerHTML = `<div class="panel muted">Job not found.</div>`; return; }
+  if (id !== currentJob) return;   // user switched jobs while this request was in flight
   const view = $("#jobview");
   const header = `
     <div class="toolbar">
@@ -256,7 +257,9 @@ async function showJob(id) {
     if (!confirm("Delete this job and its files?")) return;
     try { await api(`/api/jobs/${job.id}`, {method:"DELETE"}); currentJob = null; view.dataset.job=""; loadJobs(); } catch (e) { alert(e.message); }
   };
-  if (!job.ads.length) $("#ads").innerHTML = `<div class="panel muted">${esc(job.step)}…</div>`;
+  if (!job.ads.length) $("#ads").innerHTML = job.status === "error"
+    ? `<div class="panel"><div class="err">${esc(job.error)}</div></div>`
+    : `<div class="panel muted">${esc(job.step)}…</div>`;
   job.ads.forEach(ad => renderAd(job, ad));
   if (["queued","running"].includes(job.status) || job.ads.some(a => ["queued","running"].includes(a.status)))
     pollTimer = setTimeout(() => { if (currentJob === id) showJob(id); }, 2500);

@@ -185,12 +185,12 @@ tl.to("#end .cta",{{scale:1.08,duration:0.35,yoyo:true,repeat:3,ease:"sine.inOut
 window.__timelines["main"] = tl;
 </script>
 </body></html>"""
-    (project / "index.html").write_text(doc)
+    (project / "index.html").write_text(doc, encoding="utf-8")
     (project / "hyperframes.json").write_text(json.dumps({
         "$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
         "paths": {"blocks": "compositions", "components": "compositions/components", "assets": "assets"},
         "media": {"autoProxy": True}}, indent=2))
-    (project / "meta.json").write_text(json.dumps({"id": project.name, "name": project.name}))
+    (project / "meta.json").write_text(json.dumps({"id": project.name, "name": project.name}), encoding="utf-8")
     return {"width": W, "height": H, "total": total, "end_t": end_t, "captions": len(caps)}
 
 
@@ -207,7 +207,7 @@ def _hf_cmd() -> list[str]:
 def render(project: Path, out: Path, on_progress: Callable[[float], None] | None = None) -> Path:
     env = dict(os.environ, DO_NOT_TRACK="1", HYPERFRAMES_SKIP_SKILLS="1", CI="1")
     cmd = _hf_cmd() + ["render", "-o", str(out.resolve())]
-    p = subprocess.Popen(cmd, cwd=project, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
+    p = subprocess.Popen(cmd, cwd=project, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace", env=env)
     tail = []
     for line in p.stdout:
         tail = (tail + [line])[-40:]
