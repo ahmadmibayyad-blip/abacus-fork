@@ -22,6 +22,29 @@ def _key() -> str:
     return k
 
 
+def _explain(step: str, r: httpx.Response) -> str:
+    """Turn ElevenLabs account errors into something actionable."""
+    detail = {}
+    try:
+        detail = (r.json() or {}).get("detail") or {}
+    except ValueError:
+        pass
+    if not isinstance(detail, dict):
+        detail = {"message": str(detail)}
+    code = f"{detail.get('type', '')} {detail.get('code', '')} {detail.get('status', '')}"
+    msg = detail.get("message") or r.text[:300]
+    if "payment" in code:
+        return ("ElevenLabs blocked the request: your subscription has a failed or unpaid invoice. "
+                "Pay it at elevenlabs.io/app/subscription, then press Re-render. (" + msg + ")")
+    if "quota" in code or "credits" in code:
+        return "ElevenLabs credits are used up for this billing period (elevenlabs.io/app/subscription). (" + msg + ")"
+    if r.status_code == 401:
+        return "ElevenLabs rejected the API key; paste it again on the Settings tab. (" + msg + ")"
+    if "voice_not_found" in code or r.status_code == 404:
+        return "ElevenLabs could not find that voice ID in your account. (" + msg + ")"
+    return f"ElevenLabs {step} failed ({r.status_code}): {msg}"
+
+
 def transcribe(audio: Path) -> dict:
     """Return {"language": code, "text": str, "words": [[start, end, word], ...]}."""
     with open(audio, "rb") as f:
@@ -29,7 +52,7 @@ def transcribe(audio: Path) -> dict:
                        data={"model_id": "scribe_v1", "timestamps_granularity": "word"},
                        files={"file": (audio.name, f, "audio/wav")}, timeout=300)
     if r.status_code >= 400:
-        raise VoiceError(f"ElevenLabs speech-to-text failed ({r.status_code}): {r.text[:300]}")
+        raise VoiceError(_explain("speech-to-text", r))
     d = r.json()
     words = [[w.get("start", 0), w.get("end", 0), w.get("text", "")]
              for w in d.get("words", []) if w.get("type", "word") == "word"]
@@ -45,7 +68,7 @@ def speak(text: str, out_mp3: Path, voice_id: str | None = None, model_id: str |
                    headers={"xi-api-key": _key()},
                    json={"text": text, "model_id": model_id}, timeout=300)
     if r.status_code >= 400:
-        raise VoiceError(f"ElevenLabs text-to-speech failed ({r.status_code}): {r.text[:300]}")
+        raise VoiceError(_explain("text-to-speech", r))
     d = r.json()
     out_mp3.write_bytes(base64.b64decode(d["audio_base64"]))
     al = d.get("alignment") or d.get("normalized_alignment") or {}
