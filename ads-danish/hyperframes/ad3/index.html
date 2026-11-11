@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="da" data-resolution="portrait">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=1080, height=1920" />
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+<style>
+@font-face{font-family:'PopX';src:url(assets/Poppins-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:'PopB';src:url(assets/Poppins-Black.ttf);font-weight:900}
+@font-face{font-family:'PopM';src:url(assets/Poppins-Medium.ttf);font-weight:500}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+.clip{position:absolute;inset:0}
+.full{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#band{position:absolute;left:60px;top:880px;width:960px;height:170px;overflow:hidden;border-radius:28px}
+#band video{position:absolute;left:-60px;top:-880px;width:1080px;height:1920px;object-fit:cover;filter:blur(26px) saturate(1.05);transform:scale(1.04);transform-origin:540.0px 965.0px}
+.cap{display:flex;align-items:center;justify-content:center;text-align:center;inset:auto;left:90px;width:900px;top:813px;height:300px;z-index:5}
+.cap .in{display:inline-block;max-width:900px}
+.cap .in{font-family:'PopM';font-weight:500;font-size:58px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.65),0 0 2px rgba(0,0,0,.8);}
+#endbg{filter:blur(18px) brightness(.55);transform:scale(1.08)}
+#end{display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:6;color:#fff;font-family:'PopB';text-align:center}
+#end .e0{font-size:84px;letter-spacing:4px}
+#end .e1{font-size:190px;line-height:1}
+#end .e2{font-size:118px;line-height:1.05;color:#ff8bc3}
+#end .e2b{font-size:66px;color:#ff8bc3;margin-top:10px}
+#end .e3{font-family:'PopM';font-size:42px;margin-top:34px;opacity:.95}
+#end .cta{margin-top:70px;background:#fff;color:#111;font-size:56px;padding:26px 80px;border-radius:999px}
+</style></head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="41.8" data-width="1080" data-height="1920">
+  <video id="a-roll" class="clip full" src="assets/src.mp4" muted playsinline data-start="0" data-duration="39.63" data-track-index="0"></video>
+  <img id="endbg" class="clip full" src="assets/last.jpg" data-start="38.9" data-duration="2.90" data-track-index="1" />
+  <div id="band">
+    <video id="band-v" src="assets/src.mp4" muted playsinline data-start="0" data-duration="38.90" data-track-index="2"></video>
+  </div>
+  <div id="c0" class="clip cap" data-start="0.30" data-duration="1.58" data-track-index="3"><span class="in">Kæmpe Black Friday-tilbud</span></div><div id="c1" class="clip cap" data-start="1.88" data-duration="0.78" data-track-index="3"><span class="in">i dag!</span></div><div id="c2" class="clip cap" data-start="2.66" data-duration="1.20" data-track-index="3"><span class="in">Vores 3D-leggings er</span></div><div id="c3" class="clip cap" data-start="3.86" data-duration="1.04" data-track-index="3"><span class="in">sat 50 procent</span></div><div id="c4" class="clip cap" data-start="4.90" data-duration="0.46" data-track-index="3"><span class="in">ned</span></div><div id="c5" class="clip cap" data-start="5.36" data-duration="0.30" data-track-index="3"><span class="in">og du kan</span></div><div id="c6" class="clip cap" data-start="5.66" data-duration="0.90" data-track-index="3"><span class="in">få køb én</span></div><div id="c7" class="clip cap" data-start="6.56" data-duration="1.38" data-track-index="3"><span class="in">få én gratis</span></div><div id="c8" class="clip cap" data-start="7.94" data-duration="0.82" data-track-index="3"><span class="in">Hvis cellulite gør</span></div><div id="c9" class="clip cap" data-start="8.76" data-duration="0.60" data-track-index="3"><span class="in">dig usikker</span></div><div id="c10" class="clip cap" data-start="9.36" data-duration="0.74" data-track-index="3"><span class="in">eller du er</span></div><div id="c11" class="clip cap" data-start="10.10" data-duration="0.58" data-track-index="3"><span class="in">træt af tunge</span></div><div id="c12" class="clip cap" data-start="10.68" data-duration="1.18" data-track-index="3"><span class="in">ben hver aften</span></div><div id="c13" class="clip cap" data-start="11.86" data-duration="0.42" data-track-index="3"><span class="in">så lyt godt</span></div><div id="c14" class="clip cap" data-start="12.28" data-duration="0.84" data-track-index="3"><span class="in">efter</span></div><div id="c15" class="clip cap" data-start="13.12" data-duration="0.64" data-track-index="3"><span class="in">Det her er</span></div><div id="c16" class="clip cap" data-start="13.76" data-duration="1.85" data-track-index="3"><span class="in">ingen almindelig legging</span></div><div id="c17" class="clip cap" data-start="15.61" data-duration="1.33" data-track-index="3"><span class="in">3D-kompressionen masserer</span></div><div id="c18" class="clip cap" data-start="16.94" data-duration="0.60" data-track-index="3"><span class="in">din hud ved</span></div><div id="c19" class="clip cap" data-start="17.54" data-duration="0.96" data-track-index="3"><span class="in">hvert skridt</span></div><div id="c20" class="clip cap" data-start="18.50" data-duration="0.46" data-track-index="3"><span class="in">sætter gang i</span></div><div id="c21" class="clip cap" data-start="18.96" data-duration="1.16" data-track-index="3"><span class="in">cirkulationen og giver</span></div><div id="c22" class="clip cap" data-start="20.12" data-duration="1.34" data-track-index="3"><span class="in">et glattere look</span></div><div id="c23" class="clip cap" data-start="21.46" data-duration="1.04" data-track-index="3"><span class="in">Ingen træning</span></div><div id="c24" class="clip cap" data-start="22.50" data-duration="0.63" data-track-index="3"><span class="in">ingen creme</span></div><div id="c25" class="clip cap" data-start="23.13" data-duration="0.81" data-track-index="3"><span class="in">intet du skal</span></div><div id="c26" class="clip cap" data-start="23.94" data-duration="1.00" data-track-index="3"><span class="in">ændre du tager</span></div><div id="c27" class="clip cap" data-start="24.94" data-duration="1.00" data-track-index="3"><span class="in">dem bare på</span></div><div id="c28" class="clip cap" data-start="25.94" data-duration="0.16" data-track-index="3"><span class="in">Det</span></div><div id="c29" class="clip cap" data-start="26.10" data-duration="0.92" data-track-index="3"><span class="in">der overrasker mest?</span></div><div id="c30" class="clip cap" data-start="27.02" data-duration="1.78" data-track-index="3"><span class="in">Mange mærker forskellen</span></div><div id="c31" class="clip cap" data-start="28.80" data-duration="1.00" data-track-index="3"><span class="in">allerede de første</span></div><div id="c32" class="clip cap" data-start="29.80" data-duration="0.26" data-track-index="3"><span class="in">dage</span></div><div id="c33" class="clip cap" data-start="30.06" data-duration="1.50" data-track-index="3"><span class="in">Lettere ben</span></div><div id="c34" class="clip cap" data-start="31.56" data-duration="0.92" data-track-index="3"><span class="in">en strammere silhuet</span></div><div id="c35" class="clip cap" data-start="32.48" data-duration="0.64" data-track-index="3"><span class="in">og en mere</span></div><div id="c36" class="clip cap" data-start="33.12" data-duration="1.06" data-track-index="3"><span class="in">jævn hud</span></div><div id="c37" class="clip cap" data-start="34.18" data-duration="0.60" data-track-index="3"><span class="in">Det er årets</span></div><div id="c38" class="clip cap" data-start="34.78" data-duration="1.00" data-track-index="3"><span class="in">bedste tidspunkt at</span></div><div id="c39" class="clip cap" data-start="35.78" data-duration="0.80" data-track-index="3"><span class="in">prøve dem</span></div><div id="c40" class="clip cap" data-start="36.58" data-duration="1.20" data-track-index="3"><span class="in">Lageret forsvinder hurtigt</span></div><div id="c41" class="clip cap" data-start="37.78" data-duration="1.12" data-track-index="3"><span class="in">under Black Friday</span></div>
+  <div id="end" class="clip" data-start="38.9" data-duration="2.90" data-track-index="4"><div class="e0">BLACK FRIDAY</div><div class="e1">-50%</div><div class="e2b">+ KØB 1, FÅ 1 GRATIS</div><div class="cta">SHOP NU</div></div>
+  <audio id="vo" src="assets/vo.wav" data-start="0.3" data-duration="38.50" data-volume="1"></audio>
+</div>
+<script>
+window.__timelines = window.__timelines || {};
+const tl = gsap.timeline({ paused: true });
+tl.fromTo("#c0 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},0.30);
+tl.fromTo("#c1 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},1.88);
+tl.fromTo("#c2 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},2.66);
+tl.fromTo("#c3 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},3.86);
+tl.fromTo("#c4 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},4.90);
+tl.fromTo("#c5 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},5.36);
+tl.fromTo("#c6 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},5.66);
+tl.fromTo("#c7 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},6.56);
+tl.fromTo("#c8 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},7.94);
+tl.fromTo("#c9 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},8.76);
+tl.fromTo("#c10 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},9.36);
+tl.fromTo("#c11 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},10.10);
+tl.fromTo("#c12 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},10.68);
+tl.fromTo("#c13 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},11.86);
+tl.fromTo("#c14 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},12.28);
+tl.fromTo("#c15 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},13.12);
+tl.fromTo("#c16 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},13.76);
+tl.fromTo("#c17 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},15.61);
+tl.fromTo("#c18 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},16.94);
+tl.fromTo("#c19 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},17.54);
+tl.fromTo("#c20 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},18.50);
+tl.fromTo("#c21 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},18.96);
+tl.fromTo("#c22 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},20.12);
+tl.fromTo("#c23 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},21.46);
+tl.fromTo("#c24 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},22.50);
+tl.fromTo("#c25 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},23.13);
+tl.fromTo("#c26 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},23.94);
+tl.fromTo("#c27 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},24.94);
+tl.fromTo("#c28 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},25.94);
+tl.fromTo("#c29 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},26.10);
+tl.fromTo("#c30 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},27.02);
+tl.fromTo("#c31 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},28.80);
+tl.fromTo("#c32 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},29.80);
+tl.fromTo("#c33 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},30.06);
+tl.fromTo("#c34 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},31.56);
+tl.fromTo("#c35 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},32.48);
+tl.fromTo("#c36 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},33.12);
+tl.fromTo("#c37 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},34.18);
+tl.fromTo("#c38 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},34.78);
+tl.fromTo("#c39 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},35.78);
+tl.fromTo("#c40 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},36.58);
+tl.fromTo("#c41 .in",{y:14,opacity:0},{y:0,opacity:1,duration:0.18,ease:"power2.out"},37.78);
+tl.fromTo("#endbg",{opacity:0},{opacity:1,duration:0.35},38.9);
+tl.from("#end > div",{y:60,opacity:0,scale:0.85,duration:0.4,stagger:0.12,ease:"back.out(2)"},39.00);
+tl.to("#end .cta",{scale:1.08,duration:0.35,yoyo:true,repeat:3,ease:"sine.inOut"},39.90);
+window.__timelines["main"] = tl;
+</script>
+</body></html>
