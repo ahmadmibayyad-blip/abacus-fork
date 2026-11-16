@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parent.parent          # cloner/ project dir
 DATA = Path(os.environ.get("CLONER_DATA", ROOT / "data"))
 JOBS_DIR = DATA / "jobs"
 FONTS_DIR = ROOT / "assets" / "fonts"
-SETTINGS_FILE = ROOT / "settings.json"
+SETTINGS_FILE = Path(os.environ.get("CLONER_SETTINGS", ROOT / "settings.json"))
 STATIC = Path(__file__).resolve().parent / "static"
 
 JOBS_DIR.mkdir(parents=True, exist_ok=True)

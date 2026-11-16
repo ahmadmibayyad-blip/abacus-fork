@@ -13,6 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 os.environ["CLONER_DATA"] = tempfile.mkdtemp(prefix="cloner-test-")
+os.environ["CLONER_SETTINGS"] = os.path.join(os.environ["CLONER_DATA"], "settings.json")
 sys.path.insert(0, str(ROOT))
 
 from PIL import Image, ImageDraw, ImageFont  # noqa: E402
@@ -48,6 +49,7 @@ ADS = [
      "library_url": "https://www.facebook.com/ads/library/?id=222"},
 ]
 sources.fetch_ads = lambda url, n, raw_path=None: ADS[:n]
+sources.fetch_single_ads = lambda ids, raw_path=None: {i: dict(ADS[1], ad_id=i) for i in ids if i == "1139014535679515"}
 sources.download = lambda url, dest: dest.write_bytes((VIDEO if url == "video" else IMAGE).read_bytes()) or dest
 voice.transcribe = lambda p: {"language": "fr", "text": "Tu commandes un legging, on t'en envoie un deuxième gratuit.", "words": []}
 
@@ -77,8 +79,10 @@ ai.plan_image = lambda image, w, h, copy, opts: ai.ImagePlan(
 
 # --- run ---
 jobs.start_worker()
-job = jobs.create_from_library({"url": "https://www.facebook.com/ads/library/?view_all_page_id=1", "count": 2,
-                                "language": "Danish", "brand": "", "offer": "", "safe_claims": True})
+job = jobs.create_from_library({"urls": ["https://www.facebook.com/ads/library/?view_all_page_id=1",
+                                         "https://www.facebook.com/ads/library/?id=1139014535679515",
+                                         "https://www.facebook.com/ads/library/?id=1000000000000001"],
+                                "count": 1, "language": "Danish", "brand": "", "offer": "", "safe_claims": True})
 t0 = time.time()
 while time.time() - t0 < 900:
     j = jobs.load(job["id"])
@@ -87,10 +91,12 @@ while time.time() - t0 < 900:
     time.sleep(2)
 j = jobs.load(job["id"])
 print(json.dumps({k: j[k] for k in ("status", "error", "step")}, indent=1))
-ok = j["status"] == "done"
+ok = j["status"] == "done" and len(j["ads"]) == 3
 for a in j["ads"]:
     print(a["idx"], a["kind"], a["status"], a.get("error"), a.get("output"))
-    ok &= a["status"] == "done" and a.get("output") and (JOBS_DIR / j["id"] / a["output"]).exists()
+for a in j["ads"][:2]:   # page link (top 1 = video) + found single ad (image)
+    ok &= a["status"] == "done" and bool(a.get("output")) and (JOBS_DIR / j["id"] / a["output"]).exists()
+ok &= j["ads"][2]["status"] == "error" and "not found" in (j["ads"][2]["error"] or "")   # missing single ad
 print("JOB DIR:", JOBS_DIR / j["id"])
 print("PASS" if ok else "FAIL")
 sys.exit(0 if ok else 1)

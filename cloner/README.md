@@ -2,7 +2,12 @@
 
 A local web app that clones a page's top Meta ads into another language. It runs at **http://127.0.0.1:8765/**.
 
-You paste an Ad Library link (for example a page's ads sorted by impressions), choose how many ads and the target language, and press **Clone ads**. For each ad:
+You paste one or more Ad Library links, choose the target language, and press **Clone ads**. Use **＋ Add another link** to add more links (up to 10). You can also paste several links at once and each becomes its own row. Each link can be:
+
+- **A single ad**, like `https://www.facebook.com/ads/library/?id=1139014535679515`. You can also paste just the number. Cloner looks it up by its Library ID.
+- **A page view**, like a page's ads sorted by impressions (`…&view_all_page_id=…`). Cloner takes the top N ads, using **Ads per page link**.
+
+A job can mix both kinds, up to 20 ads in total. A single ad that can't be found is marked on its card, and the other ads still run. For each ad:
 
 | Ad type | What happens |
 |---|---|

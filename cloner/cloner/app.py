@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
-from . import config, jobs, media
+from . import config, jobs, media, sources
 
 app = FastAPI(title="Cloner")
 
@@ -22,7 +22,8 @@ def _startup() -> None:
 
 
 class JobIn(BaseModel):
-    url: str
+    url: str = ""                 # older single-link form
+    urls: List[str] = []          # page links (top N each) and/or single-ad links (?id=...)
     count: int = 3
     language: str = "Danish"
     brand: str = ""
@@ -65,10 +66,19 @@ def create_job(body: JobIn) -> dict:
         raise HTTPException(400, "Number of ads must be between 1 and 10.")
     if body.language not in jobs.LANGUAGES:
         raise HTTPException(400, "Unsupported language.")
+    links = [u.strip() for u in (body.urls or [body.url]) if u.strip()]
+    if not 1 <= len(links) <= 10:
+        raise HTTPException(400, "Add between 1 and 10 Ad Library links.")
+    try:
+        sources.classify(links)
+    except sources.SourceError as e:
+        raise HTTPException(400, str(e)) from e
     missing = [k for k in ("APIFY_TOKEN", "ANTHROPIC_API_KEY", "ELEVENLABS_API_KEY") if not config.get(k)]
     if missing:
         raise HTTPException(400, "Missing keys: " + ", ".join(missing) + " (Settings tab).")
-    return jobs.create_from_library(body.model_dump())
+    opts = body.model_dump()
+    opts["urls"], opts["url"] = links, links[0]
+    return jobs.create_from_library(opts)
 
 
 @app.post("/api/jobs/upload")

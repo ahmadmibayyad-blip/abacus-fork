@@ -110,6 +110,14 @@ def create_from_uploads(opts: dict, files: list[tuple[str, bytes]]) -> dict:
     return load(job["id"])
 
 
+MAX_ADS = 20
+
+
+def _placeholder(ad_id: str, link: str) -> dict:
+    return {"ad_id": ad_id, "kind": "unknown", "media_url": None, "page_name": "", "library_url": link,
+            "copy": {"primary_text": "", "headline": "", "description": "", "cta": ""}}
+
+
 def _ad_record(i: int, ad: dict, source: str | None = None) -> dict:
     return {"idx": i, "ad_id": ad["ad_id"], "kind": ad["kind"], "page_name": ad.get("page_name", ""),
             "library_url": ad.get("library_url", ""), "media_url": ad.get("media_url"),
@@ -143,11 +151,39 @@ def queue_rerender(job_id: str, idx: int, payload: dict) -> None:
 def _run_library(job_id: str) -> None:
     job = load(job_id)
     update(job_id, lambda j: j.update(status="running", step="Fetching ads from the Ad Library"))
-    ads = sources.fetch_ads(job["input"]["url"], int(job["input"].get("count", 3)),
-                            raw_path=job_dir(job_id) / "apify_response.json")
+    inp = job["input"]
+    links = sources.classify(inp.get("urls") or [inp.get("url", "")])
+    count = int(inp.get("count", 3))
+    root = job_dir(job_id)
+
+    # single-ad links: one Apify run for all of them
+    ids = [l["id"] for l in links if l["type"] == "ad"]
+    singles = sources.fetch_single_ads(ids, raw_path=root / "apify_single_ads.json") if ids else {}
+
+    ads, errors = [], []          # errors[i] is the error for ads[i] (None if fine)
+    for n, l in enumerate(links):
+        if l["type"] == "ad":
+            if l["id"] in singles:
+                ads.append(singles[l["id"]]); errors.append(None)
+            else:
+                ads.append(_placeholder(l["id"], l["link"]))
+                errors.append(f"Ad {l['id']} was not found in the Ad Library (removed, restricted, or the link is wrong).")
+        else:
+            try:
+                for a in sources.fetch_ads(l["url"], count, raw_path=root / f"apify_page_{n + 1}.json"):
+                    ads.append(a); errors.append(None)
+            except sources.SourceError as e:
+                ads.append(_placeholder("", l["link"])); errors.append(str(e))
+    ads, errors = ads[:MAX_ADS], errors[:MAX_ADS]
+
     records = [_ad_record(i, a) for i, a in enumerate(ads)]
+    for r, err in zip(records, errors):
+        if err:
+            r.update(status="error", error=err, step="Failed")
     update(job_id, lambda j: j.update(ads=records))
     for i, a in enumerate(records):
+        if a["status"] == "error":
+            continue
         if not a["media_url"]:
             set_ad(job_id, i, status="error", error="No image or video found on this ad.")
             continue

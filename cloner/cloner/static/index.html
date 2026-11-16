@@ -66,6 +66,11 @@ td textarea{min-height:50px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
 .muted{color:var(--muted)}
+.linkrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.linkrow input{flex:1}
+.linkrow .kind{font-size:12px;min-width:74px;text-align:center}
+.linkrow .rm{border:0;background:var(--chip);color:var(--muted);width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;flex:none}
+.linkrow .rm:hover{color:var(--err)}
 .hidden{display:none!important}
 </style>
 </head>
@@ -87,15 +92,16 @@ td textarea{min-height:50px}
       <div class="seg" id="srcseg"><button data-src="library" class="on">From Ad Library</button><button data-src="upload">Upload files</button></div>
       <form id="newform">
         <div class="field" data-for="library">
-          <label>Meta Ad Library URL (page view, sorted the way you want, e.g. by impressions)</label>
-          <input type="text" name="url" placeholder="https://www.facebook.com/ads/library/?...&view_all_page_id=..." />
+          <label>Ad Library links: one ad (…/ads/library/?id=123…) or a page view (…&amp;view_all_page_id=…, top N ads)</label>
+          <div id="links"></div>
+          <button type="button" class="btn small ghost" id="addlink" style="margin-top:8px">＋ Add another link</button>
         </div>
         <div class="field hidden" data-for="upload">
           <label>Ad images or videos (up to 10)</label>
           <input type="file" name="files" multiple accept="image/*,video/*" />
         </div>
         <div class="grid2">
-          <div class="field" data-for="library"><label>Number of ads (top N)</label><input type="number" name="count" value="3" min="1" max="10" /></div>
+          <div class="field" data-for="library"><label>Ads per page link (top N; single-ad links are always 1)</label><input type="number" name="count" value="3" min="1" max="10" /></div>
           <div class="field"><label>Target language</label><select name="language" id="lang"></select></div>
           <div class="field"><label>Your brand name (replaces theirs; empty = neutral)</label><input type="text" name="brand" placeholder="e.g. Dråbefri" /></div>
           <div class="field"><label>Your offer (empty = keep theirs)</label><input type="text" name="offer" placeholder="e.g. Buy 1 get 1 free, free shipping, 30-day returns" /></div>
@@ -175,6 +181,39 @@ async function health() {
   $("#health").innerHTML = warn.length ? `<div class="warn">${warn.join(" · ")}</div>` : "";
 }
 
+// ---- link rows (+ to add, × to remove) ----
+function linkKind(v) {
+  v = v.trim();
+  if (!v) return "";
+  if (/^\d{8,}$/.test(v)) return "single ad";
+  try {
+    const q = new URL(v).searchParams;
+    if (!/facebook\.com\/ads\/library/.test(v)) return "not a link";
+    if (q.get("id") && !q.get("view_all_page_id") && !q.get("q")) return "single ad";
+    return "page · top N";
+  } catch { return "not a link"; }
+}
+function addLink(value = "") {
+  const row = document.createElement("div");
+  row.className = "linkrow";
+  row.innerHTML = `<input type="text" placeholder="https://www.facebook.com/ads/library/?id=…" />
+    <span class="pill kind"></span><button type="button" class="rm" title="Remove">×</button>`;
+  const inp = row.querySelector("input"), kind = row.querySelector(".kind");
+  const upd = () => { const k = linkKind(inp.value); kind.textContent = k; kind.className = "pill kind " + (k === "not a link" ? "error" : k ? "done" : ""); kind.style.visibility = k ? "visible" : "hidden"; };
+  inp.value = value; upd();
+  inp.addEventListener("input", upd);
+  inp.addEventListener("paste", e => {   // paste several links at once -> one row each
+    const t = (e.clipboardData || window.clipboardData).getData("text");
+    const parts = t.split(/[\s,]+/).filter(Boolean);
+    if (parts.length > 1) { e.preventDefault(); inp.value = parts[0]; upd(); parts.slice(1).forEach(p => addLink(p)); }
+  });
+  row.querySelector(".rm").onclick = () => { if ($$("#links .linkrow").length > 1) row.remove(); else { inp.value = ""; upd(); } };
+  $("#links").appendChild(row);
+  return inp;
+}
+$("#addlink").onclick = () => { if ($$("#links .linkrow").length < 10) addLink().focus(); };
+addLink();
+
 $("#newform").onsubmit = async e => {
   e.preventDefault();
   const f = e.target, btn = $("#go");
@@ -184,8 +223,10 @@ $("#newform").onsubmit = async e => {
     const common = {language: f.language.value, brand: f.brand.value, offer: f.offer.value,
       safe_claims: f.safe_claims.checked, voice_id: f.voice_id.value.trim(), model_id: f.model_id.value.trim()};
     if (src === "library") {
+      const urls = $$("#links input").map(i => i.value.trim()).filter(Boolean);
+      if (!urls.length) throw new Error("Add at least one Ad Library link.");
       job = await api("/api/jobs", {method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({...common, url: f.url.value.trim(), count: +f.count.value})});
+        body: JSON.stringify({...common, urls, count: +f.count.value})});
     } else {
       if (!f.files.files.length) throw new Error("Choose at least one file.");
       const fd = new FormData();
@@ -221,7 +262,7 @@ async function loadJobs() {
   const list = await api("/api/jobs");
   $("#joblist").innerHTML = list.length ? list.map(j => `
     <div class="jobitem ${j.id===currentJob?"on":""}" data-id="${j.id}">
-      <div class="t">${esc(j.input.url ? (j.input.url.match(/view_all_page_id=(\d+)/)?.[1] ? "Page " + j.input.url.match(/view_all_page_id=(\d+)/)[1] : j.input.url) : "Uploaded files")}</div>
+      <div class="t">${esc(jobTitle(j.input))}</div>
       <div class="row" style="margin-top:4px"><span class="pill ${j.status}">${j.status}</span><span class="hint">${esc(j.input.language)} · ${j.done}/${j.ads} ads · ${new Date(j.created*1000).toLocaleString()}</span></div>
     </div>`).join("") : `<div class="panel muted">No jobs yet.</div>`;
   $$(".jobitem").forEach(el => el.onclick = () => { currentJob = el.dataset.id; editing.clear(); loadJobs(); });
@@ -229,6 +270,15 @@ async function loadJobs() {
   if (currentJob) showJob(currentJob);
 }
 
+function linkTitle(u) {
+  const page = u.match(/view_all_page_id=(\d+)/), ad = linkKind(u) === "single ad" ? (u.match(/[?&]id=(\d+)/) || u.match(/^(\d+)$/)) : null;
+  return page ? "Page " + page[1] : ad ? "Ad " + ad[1] : u;
+}
+function jobTitle(inp) {
+  const urls = inp.urls && inp.urls.length ? inp.urls : (inp.url ? [inp.url] : []);
+  if (!urls.length) return "Uploaded files";
+  return urls.length === 1 ? linkTitle(urls[0]) : `${linkTitle(urls[0])} + ${urls.length - 1} more`;
+}
 function fileUrl(job, p) { return `/files/${job.id}/${p}`; }
 function mediaEl(job, p, kind) {
   if (!p) return "";

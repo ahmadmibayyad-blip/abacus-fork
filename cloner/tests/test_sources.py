@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 
 os.environ["CLONER_DATA"] = tempfile.mkdtemp(prefix="cloner-unit-")
+os.environ["CLONER_SETTINGS"] = os.path.join(os.environ["CLONER_DATA"], "settings.json")
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import httpx  # noqa: E402
@@ -65,6 +66,33 @@ def run():
             assert expect in str(e), (status, str(e))
         else:
             raise AssertionError(f"no error for {status} {body}")
+    # link classification
+    assert sources.ad_id_from_link("https://www.facebook.com/ads/library/?id=1139014535679515") == "1139014535679515"
+    assert sources.ad_id_from_link("1139014535679515") == "1139014535679515"
+    assert sources.ad_id_from_link(url) is None
+    kinds = sources.classify([" https://www.facebook.com/ads/library/?id=111111111 ", "", url])
+    assert [k["type"] for k in kinds] == ["ad", "page"], kinds
+    for bad in (["https://example.com/x"], ["", "  "]):
+        try:
+            sources.classify(bad)
+        except sources.SourceError:
+            pass
+        else:
+            raise AssertionError(bad)
+
+    # single ads: search by ID, keep only exact matches
+    sent = {}
+    def capture(*a, **kw):
+        sent.update(kw["json"])
+        other = dict(IMG, ad_archive_id="999")
+        hit = dict(VID, ad_archive_id="111111111")
+        return httpx.Response(201, json=[other, hit], request=httpx.Request("POST", "https://api.apify.com"))
+    httpx.post = capture
+    found = sources.fetch_single_ads(["111111111", "222222222"])
+    assert set(found) == {"111111111"} and found["111111111"]["kind"] == "video", found
+    assert "q=111111111" in sent["urls"][0]["url"] and len(sent["urls"]) == 2, sent
+    httpx.post = fake_post(201, [])
+    assert sources.fetch_single_ads(["333333333"]) == {}   # nothing found is not an exception
     print("PASS")
 
 

@@ -16,20 +16,76 @@ class SourceError(RuntimeError):
     pass
 
 
+def ad_id_from_link(link: str) -> str | None:
+    """The Library ID if `link` points at one ad (…/ads/library/?id=123) or is a bare ID."""
+    link = link.strip()
+    if link.isdigit() and len(link) >= 8:
+        return link
+    q = parse_qs(urlparse(link).query)
+    ad_id = (q.get("id") or [""])[0]
+    if ad_id.isdigit() and not q.get("view_all_page_id") and not q.get("q"):
+        return ad_id
+    return None
+
+
+def classify(links: list[str]) -> list[dict]:
+    """[{"type": "ad", "id": ...} | {"type": "page", "url": ...}] in input order."""
+    out = []
+    for link in links:
+        link = link.strip()
+        if not link:
+            continue
+        ad_id = ad_id_from_link(link)
+        if ad_id:
+            out.append({"type": "ad", "id": ad_id, "link": link})
+        elif "facebook.com/ads/library" in link:
+            out.append({"type": "page", "url": link, "link": link})
+        else:
+            raise SourceError(f"Not a Meta Ad Library link: {link[:120]}")
+    if not out:
+        raise SourceError("Add at least one Ad Library link.")
+    return out
+
+
+def _search_url(ad_id: str) -> str:
+    # the scraper ignores ?id= links, but the Library's keyword search finds an ad by its ID
+    return ("https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL"
+            f"&is_targeted_country=false&media_type=all&q={ad_id}&search_type=keyword_unordered")
+
+
+def fetch_single_ads(ad_ids: list[str], raw_path: Path | None = None) -> dict[str, dict]:
+    """Look up specific ads by Library ID (one Apify run). Returns {id: ad}; IDs that
+    were not found are missing from the dict."""
+    items = _run([_search_url(i) for i in ad_ids], 10, raw_path, require_ads=False)
+    found = {}
+    for it in items:
+        aid = str(it.get("ad_archive_id") or "")
+        if aid in ad_ids and aid not in found and it.get("snapshot"):
+            found[aid] = normalise(it)
+    return found
+
+
 def fetch_ads(library_url: str, count: int, raw_path: Path | None = None) -> list[dict]:
     """Return the first `count` ads of an Ad Library URL, in the URL's own sort order
     (e.g. sort_data[mode]=total_impressions), normalised to Cloner's ad dict.
     The raw Apify response is saved to raw_path for debugging."""
+    if "facebook.com/ads/library" not in library_url:
+        raise SourceError("That does not look like a Meta Ad Library URL.")
+    # ask for at least 10: the scraper works in pages and small limits can return nothing
+    ads = _run([library_url], max(count, 10), raw_path, require_ads=True)
+    ads.sort(key=lambda it: it.get("position") or 10**9)
+    return [normalise(it) for it in ads[:count]]
+
+
+def _run(urls: list[str], per_url: int, raw_path: Path | None, require_ads: bool) -> list[dict]:
+    """One synchronous Apify run of the Ad Library scraper; returns the ad items."""
     token = config.get("APIFY_TOKEN").strip()
     if not token:
         raise SourceError("APIFY_TOKEN is not set (Settings tab).")
-    if "facebook.com/ads/library" not in library_url:
-        raise SourceError("That does not look like a Meta Ad Library URL.")
     payload = {
-        "urls": [{"url": library_url}],
-        # ask for at least 10: the scraper works in pages and small limits can return nothing
-        "count": max(count, 10),
-        "limitPerSource": max(count, 10),
+        "urls": [{"url": u} for u in urls],
+        "count": per_url * len(urls),
+        "limitPerSource": per_url,
         "scrapeAdDetails": False,
     }
     url = f"https://api.apify.com/v2/acts/{ACTOR}/run-sync-get-dataset-items"
@@ -54,7 +110,7 @@ def fetch_ads(library_url: str, count: int, raw_path: Path | None = None) -> lis
     if isinstance(items, dict):
         raise SourceError(f"Apify error: {_apify_msg(r)}")
     ads = [it for it in items if isinstance(it, dict) and it.get("snapshot")]
-    if not ads:
+    if not ads and require_ads:
         errs = [str(it.get("error") or it.get("errorMessage") or it.get("message") or "")
                 for it in items if isinstance(it, dict)]
         errs = [e for e in errs if e]
@@ -63,8 +119,7 @@ def fetch_ads(library_url: str, count: int, raw_path: Path | None = None) -> lis
         raise SourceError(f"The Ad Library scraper returned no ads ({detail}). Check the URL opens in a browser, "
                           "shows active ads, and that your Apify account can run "
                           "curious_coder/facebook-ads-library-scraper.")
-    ads.sort(key=lambda it: it.get("position") or 10**9)
-    return [normalise(it) for it in ads[:count]]
+    return ads
 
 
 def _apify_msg(r: httpx.Response) -> str:
