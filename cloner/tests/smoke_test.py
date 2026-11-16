@@ -27,10 +27,10 @@ work.mkdir(parents=True)
 # --- fixtures: a 9:16 video with a burned-in caption, and a square image ad with text ---
 VIDEO = work / "src.mp4"
 subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc2=s=360x640:d=8:r=30",
-                "-f", "lavfi", "-i", "sine=frequency=300:duration=8",
+                "-f", "lavfi", "-i", "sine=frequency=300:duration=9",  # audio outlasts video, like many FB ads
                 "-vf", "drawbox=x=60:y=390:w=240:h=50:color=black@0.0:t=fill,"
                        "drawtext=text='TU COMMANDES':x=(w-tw)/2:y=400:fontsize=30:fontcolor=white:borderw=3",
-                "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", str(VIDEO)], check=True)
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", str(VIDEO)], check=True)
 IMAGE = work / "src.jpg"
 im = Image.new("RGB", (1080, 1080), (181, 210, 204))
 d = ImageDraw.Draw(im)
