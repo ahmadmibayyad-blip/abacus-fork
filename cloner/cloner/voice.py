@@ -38,6 +38,9 @@ def _explain(step: str, r: httpx.Response) -> str:
                 "Pay it at elevenlabs.io/app/subscription, then press Re-render. (" + msg + ")")
     if "quota" in code or "credits" in code:
         return "ElevenLabs credits are used up for this billing period (elevenlabs.io/app/subscription). (" + msg + ")"
+    if "key id" in msg.lower() or "sk_" in msg:
+        return ("The ElevenLabs value in Settings is a Key ID, not the API key. Paste the secret key that starts "
+                "with sk_ (elevenlabs.io/app/settings/api-keys), then press Re-render.")
     if r.status_code == 401:
         return "ElevenLabs rejected the API key; paste it again on the Settings tab. (" + msg + ")"
     if "voice_not_found" in code or r.status_code == 404:

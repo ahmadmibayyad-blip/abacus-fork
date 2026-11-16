@@ -51,7 +51,16 @@ def get_settings() -> dict:
 
 @app.post("/api/settings")
 def post_settings(values: dict) -> dict:
-    config.save({k: (v or "").strip() for k, v in values.items() if isinstance(v, str)})
+    vals = {k: (v or "").strip() for k, v in values.items() if isinstance(v, str)}
+    el = vals.get("ELEVENLABS_API_KEY")
+    if el and not el.startswith("sk_"):
+        raise HTTPException(400, "That ElevenLabs value is a Key ID, not the API key. Use the secret key that "
+                                 "starts with sk_ (elevenlabs.io/app/settings/api-keys; it is shown once when "
+                                 "the key is created).")
+    an = vals.get("ANTHROPIC_API_KEY")
+    if an and not an.startswith("sk-ant-"):
+        raise HTTPException(400, "Anthropic API keys start with sk-ant- (platform.claude.com/settings/keys).")
+    config.save(vals)
     return config.public_view()
 
 

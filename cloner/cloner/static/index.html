@@ -252,9 +252,11 @@ $("#setform").onsubmit = async e => {
   e.preventDefault();
   const body = {};
   for (const el of e.target.elements) if (el.name && (el.value || el.type !== "password")) body[el.name] = el.value;
-  await api("/api/settings", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+  try {
+    await api("/api/settings", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+  } catch (err) { $("#setmsg").textContent = err.message; $("#setmsg").style.color = "var(--err)"; return; }
   $$("#setform input[type=password]").forEach(i => i.value = "");
-  $("#setmsg").textContent = "Saved."; setTimeout(() => $("#setmsg").textContent = "", 2000);
+  $("#setmsg").style.color = ""; $("#setmsg").textContent = "Saved."; setTimeout(() => $("#setmsg").textContent = "", 2000);
   loadSettings(); health();
 };
 
