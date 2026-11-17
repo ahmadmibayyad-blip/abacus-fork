@@ -1,0 +1,7 @@
+.env
+settings.json
+data/
+node_modules/
+assets/fonts/*.ttf
+__pycache__/
+.venv/

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="da" data-resolution="portrait">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=1080, height=1920" />
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+<style>
+@font-face{font-family:'PopX';src:url(assets/Poppins-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:'PopB';src:url(assets/Poppins-Black.ttf);font-weight:900}
+@font-face{font-family:'PopM';src:url(assets/Poppins-Medium.ttf);font-weight:500}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+.clip{position:absolute;inset:0}
+.full{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#band{position:absolute;left:170px;top:1140px;width:740px;height:240px;overflow:hidden;border-radius:28px}
+#band video{position:absolute;left:-170px;top:-1140px;width:1080px;height:1920px;object-fit:cover;filter:blur(26px) saturate(1.05);transform:scale(1.04);transform-origin:540.0px 1260.0px}
+.cap{display:flex;align-items:center;justify-content:center;text-align:center;inset:auto;left:90px;width:900px;top:1110px;height:300px;z-index:5}
+.cap .in{display:inline-block;max-width:900px}
+.cap .in{font-family:'PopX';font-weight:800;font-size:76px;line-height:1.05;color:#fff;text-transform:uppercase;
+  -webkit-text-stroke:0;text-shadow:0 0 6px #000,4px 4px 0 #000,-4px -4px 0 #000,4px -4px 0 #000,-4px 4px 0 #000,0 5px 0 #000,0 -5px 0 #000,5px 0 0 #000,-5px 0 0 #000;}
+ .cap .hl{color:#ff8bc3}
+#endbg{filter:blur(18px) brightness(.55);transform:scale(1.08)}
+#end{display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:6;color:#fff;font-family:'PopB';text-align:center}
+#end .e0{font-size:84px;letter-spacing:4px}
+#end .e1{font-size:190px;line-height:1}
+#end .e2{font-size:118px;line-height:1.05;color:#ff8bc3}
+#end .e2b{font-size:66px;color:#ff8bc3;margin-top:10px}
+#end .e3{font-family:'PopM';font-size:42px;margin-top:34px;opacity:.95}
+#end .cta{margin-top:70px;background:#fff;color:#111;font-size:56px;padding:26px 80px;border-radius:999px}
+</style></head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="46.6" data-width="1080" data-height="1920">
+  <video id="a-roll" class="clip full" src="assets/src.mp4" muted playsinline data-start="0" data-duration="43.53" data-track-index="0"></video>
+  <img id="endbg" class="clip full" src="assets/last.jpg" data-start="43.3" data-duration="3.30" data-track-index="1" />
+  <div id="band">
+    <video id="band-v" src="assets/src.mp4" muted playsinline data-start="0" data-duration="43.30" data-track-index="2"></video>
+  </div>
+  <div id="c0" class="clip cap" data-start="0.10" data-duration="0.72" data-track-index="3"><span class="in"><span class="hl">LIGE</span> NU</span></div><div id="c1" class="clip cap" data-start="0.82" data-duration="0.76" data-track-index="3"><span class="in"><span class="hl">BESTILLER</span> DU ÉN</span></div><div id="c2" class="clip cap" data-start="1.58" data-duration="1.16" data-track-index="3"><span class="in"><span class="hl">ANTI-CELLULITE</span> LEGGING</span></div><div id="c3" class="clip cap" data-start="2.74" data-duration="0.50" data-track-index="3"><span class="in"><span class="hl">FÅR</span> DU EN</span></div><div id="c4" class="clip cap" data-start="3.24" data-duration="1.68" data-track-index="3"><span class="in"><span class="hl">EKSTRA</span> HELT GRATIS</span></div><div id="c5" class="clip cap" data-start="4.92" data-duration="0.90" data-track-index="3"><span class="in">OG <span class="hl">ÆRLIGT</span> TALT</span></div><div id="c6" class="clip cap" data-start="5.82" data-duration="0.60" data-track-index="3"><span class="in">DET <span class="hl">VARER</span> IKKE</span></div><div id="c7" class="clip cap" data-start="6.42" data-duration="0.74" data-track-index="3"><span class="in">LÆNGE</span></div><div id="c8" class="clip cap" data-start="7.16" data-duration="0.54" data-track-index="3"><span class="in"><span class="hl">DET</span> HER ER</span></div><div id="c9" class="clip cap" data-start="7.70" data-duration="0.88" data-track-index="3"><span class="in">IKKE EN <span class="hl">ALMINDELIG</span></span></div><div id="c10" class="clip cap" data-start="8.58" data-duration="0.68" data-track-index="3"><span class="in">LEGGING</span></div><div id="c11" class="clip cap" data-start="9.26" data-duration="0.58" data-track-index="3"><span class="in"><span class="hl">STOFFET</span> HAR EN</span></div><div id="c12" class="clip cap" data-start="9.84" data-duration="0.94" data-track-index="3"><span class="in">3D-STRUKTUR</span></div><div id="c13" class="clip cap" data-start="10.78" data-duration="0.62" data-track-index="3"><span class="in">DER <span class="hl">MASSERER</span> DINE</span></div><div id="c14" class="clip cap" data-start="11.40" data-duration="0.22" data-track-index="3"><span class="in">BEN</span></div><div id="c15" class="clip cap" data-start="11.62" data-duration="0.64" data-track-index="3"><span class="in"><span class="hl">HVER</span> GANG DU</span></div><div id="c16" class="clip cap" data-start="12.26" data-duration="0.82" data-track-index="3"><span class="in"><span class="hl">BEVÆGER</span> DIG</span></div><div id="c17" class="clip cap" data-start="13.08" data-duration="0.44" data-track-index="3"><span class="in">DET <span class="hl">SÆTTER</span> GANG</span></div><div id="c18" class="clip cap" data-start="13.52" data-duration="0.92" data-track-index="3"><span class="in">I <span class="hl">CIRKULATIONEN</span></span></div><div id="c19" class="clip cap" data-start="14.44" data-duration="0.44" data-track-index="3"><span class="in">OG <span class="hl">HUDEN</span> SER</span></div><div id="c20" class="clip cap" data-start="14.88" data-duration="0.64" data-track-index="3"><span class="in"><span class="hl">GLATTERE</span> UD</span></div><div id="c21" class="clip cap" data-start="15.52" data-duration="0.94" data-track-index="3"><span class="in"><span class="hl">INTET</span> AT GØRE</span></div><div id="c22" class="clip cap" data-start="16.46" data-duration="0.90" data-track-index="3"><span class="in">MED BILLIGE <span class="hl">LEGGINGS</span></span></div><div id="c23" class="clip cap" data-start="17.36" data-duration="0.48" data-track-index="3"><span class="in">DER <span class="hl">IKKE</span> GØR</span></div><div id="c24" class="clip cap" data-start="17.84" data-duration="0.60" data-track-index="3"><span class="in">NOGET</span></div><div id="c25" class="clip cap" data-start="18.44" data-duration="0.50" data-track-index="3"><span class="in"><span class="hl">HER</span> FÅR DU</span></div><div id="c26" class="clip cap" data-start="18.94" data-duration="0.89" data-track-index="3"><span class="in">TO <span class="hl">LEGGINGS</span> TIL</span></div><div id="c27" class="clip cap" data-start="19.84" data-duration="0.61" data-track-index="3"><span class="in"><span class="hl">PRISEN</span> FOR ÉN</span></div><div id="c28" class="clip cap" data-start="20.44" data-duration="0.88" data-track-index="3"><span class="in">ÉN <span class="hl">TIL</span> DIG</span></div><div id="c29" class="clip cap" data-start="21.32" data-duration="0.70" data-track-index="3"><span class="in">OG ÉN <span class="hl">TIL</span></span></div><div id="c30" class="clip cap" data-start="22.02" data-duration="0.64" data-track-index="3"><span class="in">EN <span class="hl">ANDEN</span></span></div><div id="c31" class="clip cap" data-start="22.66" data-duration="0.60" data-track-index="3"><span class="in"><span class="hl">DIN</span> MOR</span></div><div id="c32" class="clip cap" data-start="23.26" data-duration="0.78" data-track-index="3"><span class="in">DIN <span class="hl">SØSTER</span></span></div><div id="c33" class="clip cap" data-start="24.04" data-duration="0.68" data-track-index="3"><span class="in">EN <span class="hl">VENINDE</span></span></div><div id="c34" class="clip cap" data-start="24.72" data-duration="0.42" data-track-index="3"><span class="in"><span class="hl">ELLER</span> BARE EN</span></div><div id="c35" class="clip cap" data-start="25.14" data-duration="0.42" data-track-index="3"><span class="in">EKSTRA</span></div><div id="c36" class="clip cap" data-start="25.56" data-duration="0.44" data-track-index="3"><span class="in">MENS DEN <span class="hl">ANDEN</span></span></div><div id="c37" class="clip cap" data-start="26.00" data-duration="0.44" data-track-index="3"><span class="in">ER TIL <span class="hl">VASK</span></span></div><div id="c38" class="clip cap" data-start="26.44" data-duration="0.66" data-track-index="3"><span class="in">FRAGTEN?</span></div><div id="c39" class="clip cap" data-start="27.10" data-duration="1.02" data-track-index="3"><span class="in">DEN ER <span class="hl">GRATIS</span></span></div><div id="c40" class="clip cap" data-start="28.12" data-duration="0.54" data-track-index="3"><span class="in"><span class="hl">OG</span> ER DU</span></div><div id="c41" class="clip cap" data-start="28.66" data-duration="0.60" data-track-index="3"><span class="in">IKKE <span class="hl">TILFREDS</span></span></div><div id="c42" class="clip cap" data-start="29.26" data-duration="0.48" data-track-index="3"><span class="in"><span class="hl">HAR</span> DU 30</span></div><div id="c43" class="clip cap" data-start="29.74" data-duration="0.54" data-track-index="3"><span class="in"><span class="hl">DAGE</span> TIL AT</span></div><div id="c44" class="clip cap" data-start="30.28" data-duration="1.14" data-track-index="3"><span class="in">FÅ <span class="hl">PENGENE</span> TILBAGE</span></div><div id="c45" class="clip cap" data-start="31.42" data-duration="0.50" data-track-index="3"><span class="in">DU <span class="hl">SENDER</span> PAKKEN</span></div><div id="c46" class="clip cap" data-start="31.92" data-duration="0.56" data-track-index="3"><span class="in">RETUR</span></div><div id="c47" class="clip cap" data-start="32.48" data-duration="0.18" data-track-index="3"><span class="in">OG DU <span class="hl">FÅR</span></span></div><div id="c48" class="clip cap" data-start="32.66" data-duration="0.96" data-track-index="3"><span class="in">DINE <span class="hl">PENGE</span> IGEN</span></div><div id="c49" class="clip cap" data-start="33.62" data-duration="1.14" data-track-index="3"><span class="in">UDEN <span class="hl">DISKUSSION</span></span></div><div id="c50" class="clip cap" data-start="34.76" data-duration="1.02" data-track-index="3"><span class="in"><span class="hl">MEN</span> KØB ÉN</span></div><div id="c51" class="clip cap" data-start="35.78" data-duration="0.70" data-track-index="3"><span class="in">FÅ ÉN <span class="hl">GRATIS</span></span></div><div id="c52" class="clip cap" data-start="36.48" data-duration="1.28" data-track-index="3"><span class="in">VARER <span class="hl">ALDRIG</span> LÆNGE</span></div><div id="c53" class="clip cap" data-start="37.76" data-duration="0.52" data-track-index="3"><span class="in"><span class="hl">HVER</span> GANG VI</span></div><div id="c54" class="clip cap" data-start="38.28" data-duration="0.68" data-track-index="3"><span class="in">STARTER <span class="hl">TILBUDDET</span></span></div><div id="c55" class="clip cap" data-start="38.96" data-duration="0.38" data-track-index="3"><span class="in">IGEN</span></div><div id="c56" class="clip cap" data-start="39.34" data-duration="0.48" data-track-index="3"><span class="in">ER DET <span class="hl">UDSOLGT</span></span></div><div id="c57" class="clip cap" data-start="39.82" data-duration="1.08" data-track-index="3"><span class="in">PÅ FÅ <span class="hl">DAGE</span></span></div><div id="c58" class="clip cap" data-start="40.90" data-duration="0.34" data-track-index="3"><span class="in">SÅ <span class="hl">HVIS</span> DET</span></div><div id="c59" class="clip cap" data-start="41.24" data-duration="0.54" data-track-index="3"><span class="in">HER <span class="hl">TALER</span> TIL</span></div><div id="c60" class="clip cap" data-start="41.78" data-duration="0.34" data-track-index="3"><span class="in">DIG</span></div><div id="c61" class="clip cap" data-start="42.12" data-duration="0.52" data-track-index="3"><span class="in">SÅ <span class="hl">VENT</span> IKKE</span></div><div id="c62" class="clip cap" data-start="42.64" data-duration="0.66" data-track-index="3"><span class="in">FOR <span class="hl">LÆNGE</span></span></div>
+  <div id="end" class="clip" data-start="43.3" data-duration="3.30" data-track-index="4"><div class="e1">KØB 1</div><div class="e2">FÅ 1 GRATIS</div><div class="e3">Gratis fragt · 30 dages returret</div><div class="cta">SHOP NU</div></div>
+  <audio id="vo" src="assets/vo.wav" data-start="0.1" data-duration="44.64" data-volume="1"></audio>
+</div>
+<script>
+window.__timelines = window.__timelines || {};
+const tl = gsap.timeline({ paused: true });
+tl.fromTo("#c0 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},0.10);
+tl.fromTo("#c1 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},0.82);
+tl.fromTo("#c2 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},1.58);
+tl.fromTo("#c3 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},2.74);
+tl.fromTo("#c4 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},3.24);
+tl.fromTo("#c5 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},4.92);
+tl.fromTo("#c6 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},5.82);
+tl.fromTo("#c7 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},6.42);
+tl.fromTo("#c8 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},7.16);
+tl.fromTo("#c9 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},7.70);
+tl.fromTo("#c10 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},8.58);
+tl.fromTo("#c11 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},9.26);
+tl.fromTo("#c12 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},9.84);
+tl.fromTo("#c13 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},10.78);
+tl.fromTo("#c14 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},11.40);
+tl.fromTo("#c15 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},11.62);
+tl.fromTo("#c16 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},12.26);
+tl.fromTo("#c17 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},13.08);
+tl.fromTo("#c18 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},13.52);
+tl.fromTo("#c19 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},14.44);
+tl.fromTo("#c20 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},14.88);
+tl.fromTo("#c21 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},15.52);
+tl.fromTo("#c22 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},16.46);
+tl.fromTo("#c23 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},17.36);
+tl.fromTo("#c24 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},17.84);
+tl.fromTo("#c25 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},18.44);
+tl.fromTo("#c26 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},18.94);
+tl.fromTo("#c27 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},19.84);
+tl.fromTo("#c28 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},20.44);
+tl.fromTo("#c29 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},21.32);
+tl.fromTo("#c30 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},22.02);
+tl.fromTo("#c31 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},22.66);
+tl.fromTo("#c32 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},23.26);
+tl.fromTo("#c33 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},24.04);
+tl.fromTo("#c34 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},24.72);
+tl.fromTo("#c35 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},25.14);
+tl.fromTo("#c36 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},25.56);
+tl.fromTo("#c37 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},26.00);
+tl.fromTo("#c38 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},26.44);
+tl.fromTo("#c39 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},27.10);
+tl.fromTo("#c40 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},28.12);
+tl.fromTo("#c41 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},28.66);
+tl.fromTo("#c42 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},29.26);
+tl.fromTo("#c43 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},29.74);
+tl.fromTo("#c44 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},30.28);
+tl.fromTo("#c45 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},31.42);
+tl.fromTo("#c46 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},31.92);
+tl.fromTo("#c47 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},32.48);
+tl.fromTo("#c48 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},32.66);
+tl.fromTo("#c49 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},33.62);
+tl.fromTo("#c50 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},34.76);
+tl.fromTo("#c51 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},35.78);
+tl.fromTo("#c52 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},36.48);
+tl.fromTo("#c53 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},37.76);
+tl.fromTo("#c54 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},38.28);
+tl.fromTo("#c55 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},38.96);
+tl.fromTo("#c56 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},39.34);
+tl.fromTo("#c57 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},39.82);
+tl.fromTo("#c58 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},40.90);
+tl.fromTo("#c59 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},41.24);
+tl.fromTo("#c60 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},41.78);
+tl.fromTo("#c61 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},42.12);
+tl.fromTo("#c62 .in",{scale:0.6,opacity:0},{scale:1,opacity:1,duration:0.14,ease:"back.out(2.5)"},42.64);
+tl.fromTo("#endbg",{opacity:0},{opacity:1,duration:0.35},43.3);
+tl.from("#end > div",{y:60,opacity:0,scale:0.85,duration:0.4,stagger:0.12,ease:"back.out(2)"},43.40);
+tl.to("#end .cta",{scale:1.08,duration:0.35,yoyo:true,repeat:3,ease:"sine.inOut"},44.30);
+window.__timelines["main"] = tl;
+</script>
+</body></html>
