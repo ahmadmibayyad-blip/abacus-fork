@@ -72,7 +72,14 @@ td textarea{min-height:50px}
 .clipgrid .n{position:absolute;left:4px;top:4px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:0 5px;border-radius:4px}
 .clipgrid .used img{outline:2px solid var(--accent)}
 .clipgrid .bad img{opacity:.35}
-.beats td{font-size:13px}
+.beats td{font-size:13px;vertical-align:middle}
+.beats .bt{display:flex;gap:4px;align-items:center}
+.beats .bt img{width:34px;aspect-ratio:9/16;object-fit:cover;border-radius:4px;background:#000;max-height:none}
+.beats .picker{display:none}
+.beats .picker.on{display:table-row}
+.beats .picker .clipgrid{max-height:260px}
+.beats .picker figure{cursor:pointer}
+.beats .picker figure.sel img{outline:3px solid var(--ok)}
 .linkrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .linkrow input{flex:1}
 .linkrow .kind{font-size:12px;min-width:74px;text-align:center}
@@ -107,6 +114,7 @@ td textarea{min-height:50px}
           <p class="hint" style="margin-top:0">Upload around 5 raw product videos. Cloner cuts them into scenes, Claude works out what each clip shows, writes or uses your script, records the voiceover, matches the best clip to every line and renders the finished ad with captions.</p>
           <div class="field"><label>Your product videos (up to 12; mp4, mov, webm)</label><input type="file" name="bfiles" multiple accept="video/*" /></div>
           <div class="field"><label>What is the product? (name, what it does, who it is for)</label><input type="text" name="product" placeholder="e.g. Glow board: kids draw with a light pen, no paint, no mess" /></div>
+          <div class="field"><label>Caption style</label><select name="caption_style"><option value="bold_upper">Bold pop (uppercase, highlight word)</option><option value="clean">Clean (thin white)</option><option value="none">No captions</option></select></div>
           <div class="field"><label>Script (optional: leave empty and Claude writes it; any language, it is translated)</label><textarea name="script" placeholder="Paste a voiceover script, e.g. the script of a cloned ad"></textarea></div>
         </div>
         <div class="field hidden" data-for="upload">
@@ -118,7 +126,9 @@ td textarea{min-height:50px}
           <div class="field"><label>Target language</label><select name="language" id="lang"></select></div>
           <div class="field"><label>Your brand name (replaces theirs; empty = neutral)</label><input type="text" name="brand" placeholder="e.g. Dråbefri" /></div>
           <div class="field"><label>Your offer (empty = keep theirs)</label><input type="text" name="offer" placeholder="e.g. Buy 1 get 1 free, free shipping, 30-day returns" /></div>
-          <div class="field"><label>ElevenLabs voice ID (empty = default)</label><input type="text" name="voice_id" /></div>
+          <div class="field"><label>Voice (from your ElevenLabs account)</label>
+            <div class="row" style="flex-wrap:nowrap"><select id="voicesel" style="flex:1"><option value="">Default voice</option></select><button type="button" class="btn small ghost" id="voiceplay">▶ Preview</button></div>
+            <input type="text" name="voice_id" placeholder="or paste a voice ID" style="margin-top:6px" /></div>
           <div class="field"><label>ElevenLabs model (empty = default)</label><input type="text" name="model_id" placeholder="eleven_multilingual_v2" /></div>
         </div>
         <div class="field"><label class="row" style="color:var(--ink)"><input type="checkbox" name="safe_claims" checked /> Remove claims Meta or regulators would reject (recommended)</label></div>
@@ -245,7 +255,7 @@ $("#newform").onsubmit = async e => {
       if (!f.bfiles.files.length) throw new Error("Choose your product videos.");
       const fd = new FormData();
       [...f.bfiles.files].forEach(x => fd.append("files", x));
-      for (const [k, v] of Object.entries({...common, product: f.product.value, script: f.script.value})) fd.append(k, v);
+      for (const [k, v] of Object.entries({...common, product: f.product.value, script: f.script.value, caption_style: f.caption_style.value})) fd.append(k, v);
       $("#newmsg").textContent = "Uploading videos…";
       job = await api("/api/jobs/build", {method:"POST", body: fd});
     } else {
@@ -341,6 +351,14 @@ async function showJob(id) {
 }
 async function loadJobsQuiet(){ const list = await api("/api/jobs"); $$(".jobitem").forEach(el => { const j = list.find(x=>x.id===el.dataset.id); if (j) el.querySelector(".pill").className = "pill " + j.status, el.querySelector(".pill").textContent = j.status; }); }
 
+function beatRow(job, ad, b) {
+  const byId = Object.fromEntries((ad.clips || []).map(c => [c.id, c]));
+  const thumbs = b.clips.map(id => byId[id] ? `<img src="${fileUrl(job, byId[id].thumb)}" title="clip ${id}: ${esc(byId[id].description || "")}" alt="" />` : "").join("");
+  const options = (ad.clips || []).filter(c => c.usable !== false).map(c => `<figure data-pick="${c.id}" title="${esc((c.description || "") + " · " + c.dur + "s")}"><img src="${fileUrl(job, c.thumb)}" loading="lazy" alt="" /><span class="n">${c.id}</span></figure>`).join("");
+  return `<tr data-beat="${b.i}"><td>${esc(b.text)}</td><td><div class="bt">${thumbs}<span class="hint" data-swapnote></span></div></td><td><button type="button" class="btn small ghost" data-swap="${b.i}">Swap</button></td></tr>
+    <tr class="picker" data-picker="${b.i}"><td colspan="3"><div class="clipgrid">${options}</div></td></tr>`;
+}
+
 function clipGrid(job, ad) {
   if (!ad.clips || !ad.clips.length) return `<div class="empty">${esc(ad.step)}</div>`;
   const used = new Set((ad.cuts || []).map(c => c.clip));
@@ -389,7 +407,8 @@ function editor(job, ad) {
         <div class="field"><label>End card lines (one per line)</label><textarea data-end>${esc((ad.plan.end_card_lines||[]).join("\n"))}</textarea></div>
         <div class="field"><label>End card button</label><input type="text" data-cta value="${esc(ad.plan.end_card_cta||"")}" /></div>
       </div>
-      ${ad.beats && ad.beats.length ? `<details><summary>Which clip plays on which line</summary><table class="beats">${ad.beats.map(b => `<tr><td>${esc(b.text)}</td><td class="hint" style="white-space:nowrap">clip ${b.clips.join(", ")}</td></tr>`).join("")}</table></details>` : ""}
+      ${ad.beats && ad.beats.length ? `<details open><summary>Which clip plays on which line (swap any you don't like)</summary><table class="beats">${ad.beats.map(b => beatRow(job, ad, b)).join("")}</table></details>` : ""}
+      ${ad.mode === "build" ? `<div class="field" style="margin-top:12px"><label>Caption style</label><select data-capstyle>${[["bold_upper","Bold pop (uppercase, highlight word)"],["clean","Clean (thin white)"],["none","No captions"]].map(([v,l]) => `<option value="${v}" ${ad.plan.captions && ad.plan.captions.style === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>` : ""}
       ${ad.plan.source_transcript ? `<details><summary>Original transcript</summary><p class="hint">${esc(ad.plan.source_transcript)}</p></details>` : ""}`;
   } else {
     specific = `<div class="field"><label>Text on the image (edit the translation or the box in pixels)</label>
@@ -404,24 +423,34 @@ function editor(job, ad) {
     <div class="grid2">${copyField("headline","Headline")}${copyField("description","Description")}</div>
     ${copyField("cta","Button")}
     ${specific}
-    <div class="row"><button type="button" class="btn" data-rerender>${ad.mode === "build" ? "Save & rebuild with this script" : ad.kind==="video" ? "Save & re-record + re-render" : "Save & re-render image"}</button>${ad.mode === "build" ? `<button type="button" class="btn ghost" data-newscript>New script, new ad</button>` : ""}<span class="hint" data-msg></span></div>
+    <div class="row"><button type="button" class="btn" data-rerender>${ad.mode === "build" ? "Save & rebuild" : ad.kind==="video" ? "Save & re-record + re-render" : "Save & re-render image"}</button>${ad.mode === "build" ? `<button type="button" class="btn ghost" data-newtake>Another voice take</button><button type="button" class="btn ghost" data-newscript>New script, new ad</button>` : ""}<span class="hint" data-msg></span></div>
   </details>`;
 }
 
 function wireEditor(job, ad, card) {
   const key = job.id + ":" + ad.idx;
-  card.querySelectorAll(".editor textarea, .editor input").forEach(el => el.addEventListener("input", () => editing.add(key)));
+  card.querySelectorAll(".editor textarea, .editor input, .editor select").forEach(el => el.addEventListener("input", () => editing.add(key)));
   card.querySelectorAll("[data-cp]").forEach(b => b.onclick = () => {
     const el = card.querySelector(`[data-copy="${b.dataset.cp}"]`);
     navigator.clipboard.writeText(el.value).then(() => { b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy", 1200); });
   });
-  const nb = card.querySelector("[data-newscript]");
-  if (nb) nb.onclick = async () => {
-    nb.disabled = true;
-    try { await api(`/api/jobs/${job.id}/ads/${ad.idx}/rerender`, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({new_script: true})});
+  const swaps = {};
+  card.querySelectorAll("[data-swap]").forEach(b => b.onclick = () => { editing.add(key); card.querySelector(`[data-picker="${b.dataset.swap}"]`).classList.toggle("on"); });
+  card.querySelectorAll("[data-picker]").forEach(row => row.querySelectorAll("[data-pick]").forEach(fig => fig.onclick = () => {
+    const beat = row.dataset.picker;
+    row.querySelectorAll(".sel").forEach(x => x.classList.remove("sel"));
+    fig.classList.add("sel"); swaps[beat] = +fig.dataset.pick;
+    card.querySelector(`tr[data-beat="${beat}"] [data-swapnote]`).textContent = "→ clip " + fig.dataset.pick;
+    row.classList.remove("on");
+  }));
+  const quick = (sel, body) => { const b = card.querySelector(sel); if (b) b.onclick = async () => {
+    b.disabled = true;
+    try { await api(`/api/jobs/${job.id}/ads/${ad.idx}/rerender`, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
       editing.delete(key); card.dataset.sig = ""; showJob(job.id);
-    } catch (e) { card.querySelector("[data-msg]").textContent = e.message; nb.disabled = false; }
-  };
+    } catch (e) { card.querySelector("[data-msg]").textContent = e.message; b.disabled = false; }
+  }; };
+  quick("[data-newscript]", {new_script: true});
+  quick("[data-newtake]", {new_take: true});
   const rb = card.querySelector("[data-rerender]");
   if (!rb) return;
   rb.onclick = async () => {
@@ -432,6 +461,7 @@ function wireEditor(job, ad, card) {
       body.voiceover = card.querySelector("[data-vo]").value;
       body.end_card_lines = card.querySelector("[data-end]").value.split("\n").map(s=>s.trim()).filter(Boolean);
       body.end_card_cta = card.querySelector("[data-cta]").value;
+      if (ad.mode === "build") { body.swaps = swaps; const cs = card.querySelector("[data-capstyle]"); if (cs) body.caption_style = cs.value; }
     } else {
       body.blocks = ad.plan.blocks.map((b, i) => {
         const row = card.querySelector(`tr[data-b="${i}"]`), nb = {...b};
@@ -446,6 +476,19 @@ function wireEditor(job, ad, card) {
   };
 }
 
+let voices = [], previewAudio = null;
+async function loadVoices() {
+  try { voices = await api("/api/voices"); } catch { return; }
+  $("#voicesel").innerHTML = `<option value="">Default voice</option>` + voices.map(v => `<option value="${esc(v.voice_id)}">${esc(v.name)}${v.labels ? " (" + esc(v.labels) + ")" : ""}</option>`).join("");
+}
+$("#voicesel").onchange = e => { $("#newform").voice_id.value = e.target.value; };
+$("#voiceplay").onclick = () => {
+  const id = $("#newform").voice_id.value.trim() || $("#voicesel").value, v = voices.find(x => x.voice_id === id);
+  if (previewAudio) { previewAudio.pause(); previewAudio = null; }
+  if (v && v.preview_url) { previewAudio = new Audio(v.preview_url); previewAudio.play(); }
+  else $("#newmsg").textContent = id ? "No preview for that voice." : "Pick a voice first.";
+};
+loadVoices();
 health();
 let start = "new"; try { start = localStorage.getItem("cloner-tab") || "new"; } catch {}
 tab(start);

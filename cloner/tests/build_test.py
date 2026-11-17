@@ -56,14 +56,16 @@ assert cuts[0]["clip"] == 0 and len([c for c in cuts if c["seg"] == 0]) == 2, cu
 
 # ---- stubs ----
 SCRIPT = "Stop med at scrolle. Den her tavle lyser i mørket. Børn elsker den. Bestil i dag."
-calls = {"describe": 0, "script": 0}
+calls = {"describe": 0, "script": 0, "speak": 0}
 
 
 def fake_describe(clips, thumbs, product, opts):
     calls["describe"] += 1
     assert all((thumbs / c["thumb"]).exists() for c in clips)
     return ai.ClipLibrary(product_summary="A glowing drawing board.", clips=[
-        ai.ClipInfo(id=c["id"], description=f"shot {c['id']}", shows="product_in_use", has_burned_text=False,
+        ai.ClipInfo(id=c["id"], description=f"shot {c['id']}", shows="product_in_use", has_burned_text=c["id"] == 0,
+                    text_x_pct=10 if c["id"] == 0 else 0, text_y_pct=60 if c["id"] == 0 else 0,
+                    text_w_pct=80 if c["id"] == 0 else 0, text_h_pct=12 if c["id"] == 0 else 0,
                     usable=c["id"] != 1) for c in clips])
 
 
@@ -81,6 +83,7 @@ def fake_match(segs, clips, opts):
 
 
 def fake_speak(text, out_mp3, voice_id=None, model_id=None):
+    calls["speak"] += 1
     ws = text.split()
     dur = 0.4 * len(ws) + 0.6
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", f"sine=frequency=440:duration={dur:.2f}",
@@ -113,13 +116,35 @@ ok &= bool(out1) and (JOBS_DIR / j["id"] / out1).exists()
 ok &= all(c["clip"] != 1 for c in a["cuts"])                       # the unusable clip is never used
 ok &= a["plan"]["voiceover"] == SCRIPT and len(a["beats"]) == 4
 
+ok &= a["cuts"][0]["blur"] is not None and all(c["blur"] is None for c in a["cuts"] if c["clip"] != 0)   # caption blur
+
+# swap a clip + change caption style: no new voiceover, no new script
+last_beat = a["beats"][-1]["i"]
+target = next(c["id"] for c in a["clips"] if c["id"] not in (1, a["beats"][-1]["clips"][0]))
+jobs.queue_rerender(j["id"], 0, {"voiceover": a["plan"]["voiceover"], "swaps": {str(last_beat): target}, "caption_style": "clean"})
+time.sleep(1)
+j = wait(j["id"])
+a = j["ads"][0]
+print(a["status"], a.get("error"), "| swapped beat", last_beat, "->", a["beats"][-1]["clips"], "| style", a["plan"]["captions"]["style"])
+ok &= a["status"] == "done" and a["beats"][-1]["clips"][0] == target and a["plan"]["captions"]["style"] == "clean"
+ok &= calls == {"describe": 1, "script": 1, "speak": 1} and a["output"] != out1
+out1 = a["output"]
+
+# another voice take: new recording, same script
+jobs.queue_rerender(j["id"], 0, {"new_take": True})
+time.sleep(1)
+j = wait(j["id"])
+a = j["ads"][0]
+ok &= a["status"] == "done" and calls == {"describe": 1, "script": 1, "speak": 2} and a["plan"]["voiceover"] == SCRIPT
+out1 = a["output"]
+
 # "New script, new ad": clips are reused (no second describe), script is rewritten
 jobs.queue_rerender(j["id"], 0, {"new_script": True})
 time.sleep(1)
 j = wait(j["id"])
 a = j["ads"][0]
 print(a["status"], a.get("error"), a.get("output"), "| scripts:", len(a["scripts"]))
-ok &= a["status"] == "done" and a["output"] != out1 and calls == {"describe": 1, "script": 2}
+ok &= a["status"] == "done" and a["output"] != out1 and calls == {"describe": 1, "script": 2, "speak": 3}
 ok &= a["plan"]["voiceover"].startswith("Ny vinkel") and len(a["scripts"]) == 2
 print("JOB DIR:", JOBS_DIR / j["id"])
 print("PASS" if ok else "FAIL")

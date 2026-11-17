@@ -48,10 +48,17 @@ def _explain(step: str, r: httpx.Response) -> str:
     return f"ElevenLabs {step} failed ({r.status_code}): {msg}"
 
 
+def _send(method: str, url: str, **kw) -> httpx.Response:
+    try:
+        return httpx.request(method, url, **kw)
+    except httpx.HTTPError as e:
+        raise VoiceError(f"Could not reach ElevenLabs ({type(e).__name__}). Check your internet connection.") from e
+
+
 def transcribe(audio: Path) -> dict:
     """Return {"language": code, "text": str, "words": [[start, end, word], ...]}."""
     with open(audio, "rb") as f:
-        r = httpx.post(f"{API}/speech-to-text", headers={"xi-api-key": _key()},
+        r = _send("POST", f"{API}/speech-to-text", headers={"xi-api-key": _key()},
                        data={"model_id": "scribe_v1", "timestamps_granularity": "word"},
                        files={"file": (audio.name, f, "audio/wav")}, timeout=300)
     if r.status_code >= 400:
@@ -66,7 +73,7 @@ def speak(text: str, out_mp3: Path, voice_id: str | None = None, model_id: str |
     """Synthesize `text`, write mp3, return word timings [[start, end, word], ...]."""
     voice_id = voice_id or config.get("ELEVENLABS_VOICE_ID")
     model_id = model_id or config.get("ELEVENLABS_MODEL_ID")
-    r = httpx.post(f"{API}/text-to-speech/{voice_id}/with-timestamps",
+    r = _send("POST", f"{API}/text-to-speech/{voice_id}/with-timestamps",
                    params={"output_format": "mp3_44100_128"},
                    headers={"xi-api-key": _key()},
                    json={"text": text, "model_id": model_id}, timeout=300)
@@ -94,3 +101,17 @@ def chars_to_words(chars, starts, ends) -> list:
     if cur:
         words.append([s, e, cur])
     return words
+
+
+def list_voices() -> list[dict]:
+    """Voices in the user's ElevenLabs account: [{voice_id, name, preview_url, labels}]."""
+    r = _send("GET", f"{API}/voices", headers={"xi-api-key": _key()}, timeout=30)
+    if r.status_code >= 400:
+        raise VoiceError(_explain("voice list", r))
+    out = []
+    for v in r.json().get("voices", []):
+        lab = v.get("labels") or {}
+        out.append({"voice_id": v.get("voice_id"), "name": v.get("name") or "",
+                    "preview_url": v.get("preview_url") or "",
+                    "labels": " · ".join(str(lab[k]) for k in ("language", "gender", "accent", "age") if lab.get(k))})
+    return sorted(out, key=lambda v: v["name"].lower())

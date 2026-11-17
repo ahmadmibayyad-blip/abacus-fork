@@ -104,7 +104,8 @@ def plan_cuts(segs: list[dict], clips: list[dict], assignments: dict[int, list[i
             take = min(c["dur"], need)
             if need - take < 0.6 < need and c["dur"] >= need:   # avoid a sliver at the end of a beat
                 take = need
-            cuts.append({"clip": c["id"], "file": c["file"], "start": c["start"], "dur": round(take, 3), "seg": s["i"]})
+            cuts.append({"clip": c["id"], "file": c["file"], "start": c["start"], "dur": round(take, 3), "seg": s["i"],
+                         "blur": text_box(c)})
             need -= take
             last = c["id"]
             if take < 0.05:
@@ -112,16 +113,34 @@ def plan_cuts(segs: list[dict], clips: list[dict], assignments: dict[int, list[i
     return cuts
 
 
+def text_box(c: dict) -> list | None:
+    """[x, y, w, h] as fractions of the frame for burned-in text to hide, or None."""
+    if not c.get("has_burned_text"):
+        return None
+    x, y, w, h = (float(c.get(k) or 0) / 100 for k in ("text_x_pct", "text_y_pct", "text_w_pct", "text_h_pct"))
+    x, y = max(x - 0.01, 0.0), max(y - 0.01, 0.0)
+    w, h = min(w + 0.02, 1 - x), min(h + 0.02, 1 - y)
+    if w < 0.05 or h < 0.02 or w * h > 0.45:      # nothing sensible to blur, or it would hide the shot
+        return None
+    return [round(v, 4) for v in (x, y, w, h)]
+
+
 def montage(cuts: list[dict], files_dir: Path, work: Path, out: Path) -> Path:
     """Cut each piece to 1080x1920 / 30 fps (cropped to fill) and join them, without sound."""
     work.mkdir(parents=True, exist_ok=True)
-    vf = (f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},setsar=1,format=yuv420p")
+    fit = f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},setsar=1,format=yuv420p"
     parts = []
     for n, c in enumerate(cuts):
         part = work / f"part_{n:03d}.mp4"
+        if c.get("blur"):     # hide captions burned into the source before fitting it to 9:16
+            x, y, w, h = c["blur"]
+            graph = (f"[0:v]split[a][b];[b]crop=iw*{w}:ih*{h}:iw*{x}:ih*{y},boxblur=20:3[bl];"
+                     f"[a][bl]overlay=main_w*{x}:main_h*{y},{fit}[v]")
+        else:
+            graph = f"[0:v]{fit}[v]"
         media._run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{c['start']:.3f}", "-i", str(files_dir / c["file"]),
-                    "-t", f"{c['dur']:.3f}", "-an", "-vf", vf, "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
-                    str(part)])
+                    "-t", f"{c['dur']:.3f}", "-an", "-filter_complex", graph, "-map", "[v]",
+                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", str(part)])
         parts.append(part)
     lst = work / "parts.txt"
     lst.write_text("".join(f"file '{p.name}'\n" for p in parts), encoding="utf-8")

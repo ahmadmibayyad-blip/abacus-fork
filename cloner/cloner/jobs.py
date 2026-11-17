@@ -155,7 +155,16 @@ def queue_rerender(job_id: str, idx: int, payload: dict) -> None:
         if not a.get("source") and a.get("mode") != "build":
             raise ValueError("This ad has no downloaded media to re-render.")
         p = payload if a.get("plan") else {}
-        a["new_script"] = bool(p.get("new_script")) and a.get("mode") == "build"
+        if a.get("mode") == "build" and a.get("plan"):
+            a["new_script"] = bool(p.get("new_script"))
+            changed = "voiceover" in p and p["voiceover"].strip() != (a["plan"].get("voiceover") or "").strip()
+            a["redo_voice"] = bool(a["new_script"] or p.get("new_take") or changed)
+            if p.get("caption_style") in ("bold_upper", "clean", "none"):
+                a["plan"]["captions"]["style"] = p["caption_style"]
+            ids = {c["id"] for c in a.get("clips") or []}
+            for beat, clip in (p.get("swaps") or {}).items():
+                if int(clip) in ids:
+                    a.setdefault("swaps", {})[str(int(beat))] = int(clip)
         if a["kind"] == "video" and "voiceover" in p:
             a["plan"]["voiceover"] = p["voiceover"]
             if "end_card_lines" in p:
@@ -341,7 +350,8 @@ def _video(job_id: str, i: int, fresh: bool) -> None:
 
 
 def _build(job_id: str, i: int, fresh: bool) -> None:
-    """Ad from the user's own footage: scenes -> descriptions -> script -> voice -> matched montage -> render."""
+    """Ad from the user's own footage: scenes -> descriptions -> script -> voice -> matched montage -> render.
+    Later runs redo only what changed: a clip swap or caption style keeps the voiceover."""
     job = load(job_id)
     a, opts = job["ads"][i], job["input"]
     root = job_dir(job_id)
@@ -372,28 +382,41 @@ def _build(job_id: str, i: int, fresh: bool) -> None:
         given = "" if a.get("new_script") else opts.get("script", "")
         lib = {"product_summary": a.get("product_summary", ""), "clips": clips}
         plan = ai.write_build_script(lib, opts.get("product", ""), given, a.get("scripts") or [], opts).model_dump()
+        style = (a.get("plan") or {}).get("captions", {}).get("style") or opts.get("caption_style") or "bold_upper"
         plan["captions"] = {"present": False, "x_pct": 0, "y_pct": 0, "w_pct": 0, "h_pct": 0,
-                            "style": "bold_upper", "highlight_color": "#ff8bc3"}
+                            "style": style, "highlight_color": "#ff8bc3"}
         set_ad(job_id, i, plan=plan, ad_copy=plan["ad_copy"], changes=plan["changes"], new_script=False,
-               scripts=(a.get("scripts") or []) + [plan["voiceover"]], progress=32)
+               redo_voice=True, scripts=(a.get("scripts") or []) + [plan["voiceover"]], progress=32)
         a = load(job_id)["ads"][i]
     plan = a["plan"]
 
-    set_ad(job_id, i, step="Recording the voiceover", progress=36)
-    raw = d / "vo_raw.mp3"
-    words = voice.speak(plan["voiceover"], raw, voice_id=opts.get("voice_id") or None,
-                        model_id=opts.get("model_id") or None)
-    if not words:
-        raise voice.VoiceError("The voiceover came back without timings.")
-    start, end = max(words[0][0] - 0.05, 0), words[-1][1] + 0.2
-    vo = media.cut_audio(raw, d / "vo_cut.wav", start, end)
-    words = [[w0 - start, w1 - start, t] for w0, w1, t in words]
+    vo, words_file = d / "vo_cut.wav", d / "words.json"
+    if fresh or a.get("redo_voice") or not (vo.exists() and words_file.exists() and a.get("assign")):
+        set_ad(job_id, i, step="Recording the voiceover", progress=36)
+        raw = d / "vo_raw.mp3"
+        words = voice.speak(plan["voiceover"], raw, voice_id=opts.get("voice_id") or None,
+                            model_id=opts.get("model_id") or None)
+        if not words:
+            raise voice.VoiceError("The voiceover came back without timings.")
+        start, end = max(words[0][0] - 0.05, 0), words[-1][1] + 0.2
+        media.cut_audio(raw, vo, start, end)
+        words = [[w0 - start, w1 - start, t] for w0, w1, t in words]
+        words_file.write_text(json.dumps(words, ensure_ascii=False), encoding="utf-8")
 
-    set_ad(job_id, i, step="Claude is matching clips to the script", progress=44)
+        set_ad(job_id, i, step="Claude is matching clips to the script", progress=44)
+        segs = builder.segments(words)
+        match = ai.match_clips(segs, clips, opts).model_dump()
+        assign = {str(m["segment"]): m["clip_ids"] for m in match["assignments"]}
+        set_ad(job_id, i, assign=assign, swaps={}, redo_voice=False)     # new beats: earlier swaps no longer apply
+        a = load(job_id)["ads"][i]
+    words = json.loads(words_file.read_text(encoding="utf-8"))
     segs = builder.segments(words)
-    segs[0]['dur'] = round(segs[0]['dur'] + 0.15, 2)   # the voiceover starts 0.15 s into the video
-    match = ai.match_clips(segs, clips, opts).model_dump()
-    cuts = builder.plan_cuts(segs, clips, {m["segment"]: m["clip_ids"] for m in match["assignments"]})
+    segs[0]["dur"] = round(segs[0]["dur"] + 0.15, 2)   # the voiceover starts 0.15 s into the video
+
+    assign = {int(k): v for k, v in (a.get("assign") or {}).items()}
+    for beat, clip in (a.get("swaps") or {}).items():
+        assign[int(beat)] = [int(clip)]
+    cuts = builder.plan_cuts(segs, clips, assign)
     set_ad(job_id, i, step="Cutting the montage", progress=50, cuts=cuts,
            beats=[dict(sg, clips=[c["clip"] for c in cuts if c["seg"] == sg["i"]]) for sg in segs])
     src = builder.montage(cuts, footage, d / "parts", d / "montage.mp4")

@@ -64,6 +64,15 @@ def post_settings(values: dict) -> dict:
     return config.public_view()
 
 
+@app.get("/api/voices")
+def voices() -> list:
+    from . import voice
+    try:
+        return voice.list_voices()
+    except voice.VoiceError as e:
+        raise HTTPException(400, str(e)) from e
+
+
 @app.get("/api/jobs")
 def list_jobs() -> list:
     return jobs.list_jobs()
@@ -109,7 +118,8 @@ async def create_upload_job(files: List[UploadFile] = File(...), language: str =
 async def create_build_job(files: List[UploadFile] = File(...), language: str = Form("Danish"),
                            brand: str = Form(""), offer: str = Form(""), safe_claims: bool = Form(True),
                            voice_id: str = Form(""), model_id: str = Form(""),
-                           product: str = Form(""), script: str = Form("")) -> dict:
+                           product: str = Form(""), script: str = Form(""),
+                           caption_style: str = Form("bold_upper")) -> dict:
     """Build one ad from the user's own product videos."""
     if language not in jobs.LANGUAGES:
         raise HTTPException(400, "Unsupported language.")
@@ -119,7 +129,8 @@ async def create_build_job(files: List[UploadFile] = File(...), language: str = 
     data = [(f.filename or "video.mp4", await f.read()) for f in files[:12]]
     opts = {"url": "", "urls": [], "count": 1, "language": language, "brand": brand, "offer": offer,
             "safe_claims": safe_claims, "voice_id": voice_id, "model_id": model_id,
-            "product": product.strip(), "script": script.strip()}
+            "product": product.strip(), "script": script.strip(),
+            "caption_style": caption_style if caption_style in ("bold_upper", "clean", "none") else "bold_upper"}
     return jobs.create_build(opts, data)
 
 
@@ -150,6 +161,9 @@ class RerenderIn(BaseModel):
     blocks: Optional[list] = None
     ad_copy: Optional[dict] = None
     new_script: Optional[bool] = None
+    new_take: Optional[bool] = None       # record the voiceover again
+    swaps: Optional[dict] = None          # {beat index: clip id}
+    caption_style: Optional[str] = None   # bold_upper | clean | none
 
 
 @app.post("/api/jobs/{job_id}/ads/{idx}/rerender")

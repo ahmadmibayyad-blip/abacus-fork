@@ -83,7 +83,7 @@ def build(project: Path, *, src_video: Path, last_jpg: Path, vo_audio: Path, wor
     a_end = round(min(dur, end_t), 2)
 
     upper = style == "bold_upper"
-    groups = _chunks(words, 3 if upper else 4, 16 if upper else 24)
+    groups = [] if style == "none" else _chunks(words, 3 if upper else 4, 16 if upper else 24)
     caps, anim = [], []
     for i, g in enumerate(groups):
         st = g[0][0] + off

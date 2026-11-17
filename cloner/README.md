@@ -33,7 +33,18 @@ The third mode on **New clone** makes a new ad from your own raw product videos,
    - has Claude pick the best clip for every spoken line,
    - cuts the montage in 9:16 and renders it with captions and an end card.
 
-The job page shows your clip library (clips used in the ad are outlined) and which clip plays on which line. **Save & rebuild with this script** applies your edits. **New script, new ad** has Claude write a different hook and angle and builds another ad from the same clips, without analysing them again.
+Captions that are already burned into your source videos are blurred out, so only the new captions show.
+
+On the job page you can:
+
+- **See your clip library.** Clips used in the ad are outlined.
+- **Swap a clip.** Under "Which clip plays on which line", press **Swap** on a line and pick another clip, then **Save & rebuild**. The voiceover is kept.
+- **Change the caption style**: bold pop, clean, or no captions.
+- **Edit the script** and press **Save & rebuild**. The voiceover is recorded again only when the script changed.
+- **Another voice take**: records the same script again.
+- **New script, new ad**: Claude writes a different hook and angle and builds another ad from the same clips, without analysing them again.
+
+On the **New clone** tab, the voice list shows the voices in your ElevenLabs account, with a preview button.
 
 ## Requirements
 

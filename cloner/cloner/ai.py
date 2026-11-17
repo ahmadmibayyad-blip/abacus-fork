@@ -196,6 +196,10 @@ class ClipInfo(BaseModel):
     description: str       # what is visible, one short sentence
     shows: Literal["product_closeup", "product_in_use", "person_talking", "result", "unboxing", "lifestyle", "other"]
     has_burned_text: bool  # captions/logos/watermarks baked into the footage
+    text_x_pct: float      # box around that burned-in text, % of the frame (all 0 if none)
+    text_y_pct: float
+    text_w_pct: float
+    text_h_pct: float
     usable: bool           # false for blurry, black, or irrelevant footage
 
 
@@ -229,7 +233,7 @@ def describe_clips(clips: list[dict], thumbs_dir: Path, product: str, opts: dict
     content.append({"type": "text", "text": f"""Above is one frame from each of {len(clips)} clips cut from a seller's raw product videos.
 Product notes from the seller: {product or "(none given)"}
 
-For every clip id, say what is visible (in English, one short concrete sentence an editor could match to a script line), classify it, flag burned-in text, and mark unusable footage. Then summarise the product in one or two sentences: what it is and what it does, judging from the footage and the notes. Return every clip id exactly once."""})
+For every clip id, say what is visible (in English, one short concrete sentence an editor could match to a script line), classify it, and mark unusable footage. If captions, subtitles or other overlaid text are burned into the frame, set has_burned_text and give one box (percent of frame width/height, with a small margin) that covers where such text sits so it can be blurred out; use 0 for all four numbers when there is none. Text printed on the product itself is not burned-in text. Then summarise the product in one or two sentences: what it is and what it does, judging from the footage and the notes. Return every clip id exactly once."""})
     return _parse(content, ClipLibrary, opts)
 
 
