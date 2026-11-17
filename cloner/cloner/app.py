@@ -105,6 +105,24 @@ async def create_upload_job(files: List[UploadFile] = File(...), language: str =
     return jobs.create_from_uploads(opts, data)
 
 
+@app.post("/api/jobs/build")
+async def create_build_job(files: List[UploadFile] = File(...), language: str = Form("Danish"),
+                           brand: str = Form(""), offer: str = Form(""), safe_claims: bool = Form(True),
+                           voice_id: str = Form(""), model_id: str = Form(""),
+                           product: str = Form(""), script: str = Form("")) -> dict:
+    """Build one ad from the user's own product videos."""
+    if language not in jobs.LANGUAGES:
+        raise HTTPException(400, "Unsupported language.")
+    missing = [k for k in ("ANTHROPIC_API_KEY", "ELEVENLABS_API_KEY") if not config.get(k)]
+    if missing:
+        raise HTTPException(400, "Missing keys: " + ", ".join(missing) + " (Settings tab).")
+    data = [(f.filename or "video.mp4", await f.read()) for f in files[:12]]
+    opts = {"url": "", "urls": [], "count": 1, "language": language, "brand": brand, "offer": offer,
+            "safe_claims": safe_claims, "voice_id": voice_id, "model_id": model_id,
+            "product": product.strip(), "script": script.strip()}
+    return jobs.create_build(opts, data)
+
+
 def _job_or_404(job_id: str) -> dict:
     if not (jobs.job_dir(job_id) / "job.json").exists() or "/" in job_id or ".." in job_id:
         raise HTTPException(404, "Job not found.")
@@ -131,6 +149,7 @@ class RerenderIn(BaseModel):
     end_card_cta: Optional[str] = None
     blocks: Optional[list] = None
     ad_copy: Optional[dict] = None
+    new_script: Optional[bool] = None
 
 
 @app.post("/api/jobs/{job_id}/ads/{idx}/rerender")

@@ -13,7 +13,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from . import ai, compose, imagetext, media, sources, voice
+from . import ai, builder, compose, imagetext, media, sources, voice
 from .config import JOBS_DIR
 
 LANGUAGES = {
@@ -110,6 +110,30 @@ def create_from_uploads(opts: dict, files: list[tuple[str, bytes]]) -> dict:
     return load(job["id"])
 
 
+def create_build(opts: dict, files: list[tuple[str, bytes]]) -> dict:
+    """One ad built from the user's own product videos."""
+    opts["mode"] = "build"
+    job = _new(opts)
+    d = job_dir(job["id"]) / "ad1" / "footage"
+    d.mkdir(parents=True)
+    names = []
+    for n, (name, data) in enumerate(files):
+        ext = Path(name).suffix.lower()
+        if ext not in builder.VIDEO_EXT:
+            continue
+        fn = f"video_{n + 1:02d}{ext}"
+        (d / fn).write_bytes(data)
+        names.append(fn)
+    rec = _ad_record(0, {"ad_id": "My clips", "kind": "video", "media_url": None, "page_name": "", "library_url": "",
+                         "copy": {"primary_text": "", "headline": "", "description": "", "cta": ""}})
+    rec.update(mode="build", footage=names, clips=[], scripts=[])
+    if not names:
+        rec.update(status="error", error="No video files were uploaded (mp4, mov, webm, m4v, mkv).")
+    update(job["id"], lambda j: j.update(ads=[rec]))
+    _q.put(("process", job["id"]))
+    return load(job["id"])
+
+
 MAX_ADS = 20
 
 
@@ -128,9 +152,10 @@ def _ad_record(i: int, ad: dict, source: str | None = None) -> dict:
 def queue_rerender(job_id: str, idx: int, payload: dict) -> None:
     def fn(j):
         a = j["ads"][idx]
-        if not a.get("source"):
+        if not a.get("source") and a.get("mode") != "build":
             raise ValueError("This ad has no downloaded media to re-render.")
         p = payload if a.get("plan") else {}
+        a["new_script"] = bool(p.get("new_script")) and a.get("mode") == "build"
         if a["kind"] == "video" and "voiceover" in p:
             a["plan"]["voiceover"] = p["voiceover"]
             if "end_card_lines" in p:
@@ -203,10 +228,12 @@ def _run_process(job_id: str) -> None:
     update(job_id, lambda j: j.update(status="running", step="Cloning ads"))
     job = load(job_id)
     for i, a in enumerate(job["ads"]):
-        if a["status"] == "error" or not a.get("source"):
+        if a["status"] == "error" or (not a.get("source") and a.get("mode") != "build"):
             continue
         try:
-            if a["kind"] == "video":
+            if a.get("mode") == "build":
+                _build(job_id, i, fresh=True)
+            elif a["kind"] == "video":
                 _video(job_id, i, fresh=True)
             else:
                 _image(job_id, i, fresh=True)
@@ -313,11 +340,87 @@ def _video(job_id: str, i: int, fresh: bool) -> None:
     set_ad(job_id, i, status="done", step="Done", progress=100, output=str(out.relative_to(root)))
 
 
+def _build(job_id: str, i: int, fresh: bool) -> None:
+    """Ad from the user's own footage: scenes -> descriptions -> script -> voice -> matched montage -> render."""
+    job = load(job_id)
+    a, opts = job["ads"][i], job["input"]
+    root = job_dir(job_id)
+    d = root / "ad1"
+    footage, thumbs = d / "footage", d / "clips"
+    set_ad(job_id, i, status="running", progress=3)
+
+    if not a.get("clips"):
+        set_ad(job_id, i, step="Cutting your videos into scenes")
+        clips = builder.split_scenes([footage / f for f in a["footage"]], thumbs)
+        if not clips:
+            raise media.MediaError("No usable scenes were found in the uploaded videos.")
+        set_ad(job_id, i, step=f"Claude is looking at {len(clips)} clips", progress=10,
+               clips=[dict(c, thumb=f"ad1/clips/{c['thumb']}") for c in clips])
+        lib = ai.describe_clips(clips, thumbs, opts.get("product", ""), opts).model_dump()
+        info = {c["id"]: c for c in lib["clips"]}
+        for c in clips:
+            c.update({k: v for k, v in info.get(c["id"], {}).items() if k != "id"})
+            c.setdefault("description", ""); c.setdefault("usable", True); c.setdefault("shows", "other")
+            c["thumb"] = f"ad1/clips/{c['thumb']}"
+        set_ad(job_id, i, clips=clips, product_summary=lib["product_summary"], progress=22,
+               thumb=clips[0]["thumb"])
+        a = load(job_id)["ads"][i]
+    clips = a["clips"]
+
+    if fresh or a.get("new_script") or not a.get("plan"):
+        set_ad(job_id, i, step="Claude is writing the script", progress=25)
+        given = "" if a.get("new_script") else opts.get("script", "")
+        lib = {"product_summary": a.get("product_summary", ""), "clips": clips}
+        plan = ai.write_build_script(lib, opts.get("product", ""), given, a.get("scripts") or [], opts).model_dump()
+        plan["captions"] = {"present": False, "x_pct": 0, "y_pct": 0, "w_pct": 0, "h_pct": 0,
+                            "style": "bold_upper", "highlight_color": "#ff8bc3"}
+        set_ad(job_id, i, plan=plan, ad_copy=plan["ad_copy"], changes=plan["changes"], new_script=False,
+               scripts=(a.get("scripts") or []) + [plan["voiceover"]], progress=32)
+        a = load(job_id)["ads"][i]
+    plan = a["plan"]
+
+    set_ad(job_id, i, step="Recording the voiceover", progress=36)
+    raw = d / "vo_raw.mp3"
+    words = voice.speak(plan["voiceover"], raw, voice_id=opts.get("voice_id") or None,
+                        model_id=opts.get("model_id") or None)
+    if not words:
+        raise voice.VoiceError("The voiceover came back without timings.")
+    start, end = max(words[0][0] - 0.05, 0), words[-1][1] + 0.2
+    vo = media.cut_audio(raw, d / "vo_cut.wav", start, end)
+    words = [[w0 - start, w1 - start, t] for w0, w1, t in words]
+
+    set_ad(job_id, i, step="Claude is matching clips to the script", progress=44)
+    segs = builder.segments(words)
+    segs[0]['dur'] = round(segs[0]['dur'] + 0.15, 2)   # the voiceover starts 0.15 s into the video
+    match = ai.match_clips(segs, clips, opts).model_dump()
+    cuts = builder.plan_cuts(segs, clips, {m["segment"]: m["clip_ids"] for m in match["assignments"]})
+    set_ad(job_id, i, step="Cutting the montage", progress=50, cuts=cuts,
+           beats=[dict(sg, clips=[c["clip"] for c in cuts if c["seg"] == sg["i"]]) for sg in segs])
+    src = builder.montage(cuts, footage, d / "parts", d / "montage.mp4")
+    info = media.probe(src)
+    last = media.last_frame(src, d / "last.jpg")
+
+    set_ad(job_id, i, step="Building the HyperFrames composition", progress=58)
+    proj = d / "hyperframes"
+    meta = compose.build(proj, src_video=src, last_jpg=last, vo_audio=vo, words=words, probe=info,
+                         plan=plan, lang_code=opts.get("lang_code", "da"))
+    set_ad(job_id, i, step="Rendering with HyperFrames", progress=60, render=meta)
+    raw_out = d / "render_raw.mp4"
+    compose.render(proj, raw_out, on_progress=lambda p: set_ad(job_id, i, progress=60 + int(p * 0.36)))
+    set_ad(job_id, i, step="Compressing", progress=97)
+    out = d / f"ad_{int(time.time())}.mp4"
+    media.compress(raw_out, out)
+    raw_out.unlink(missing_ok=True)
+    set_ad(job_id, i, status="done", step="Done", progress=100, output=str(out.relative_to(root)))
+
+
 def _rerender(job_id: str, idx: int) -> None:
     update(job_id, lambda j: j.update(status="running"))
     try:
         a = load(job_id)["ads"][idx]
-        if a["kind"] == "video":
+        if a.get("mode") == "build":
+            _build(job_id, idx, fresh=False)
+        elif a["kind"] == "video":
             _video(job_id, idx, fresh=False)
         else:
             _image(job_id, idx, fresh=False)

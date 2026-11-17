@@ -66,6 +66,13 @@ td textarea{min-height:50px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
 .muted{color:var(--muted)}
+.clipgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px;max-height:520px;overflow:auto}
+.clipgrid figure{margin:0;position:relative}
+.clipgrid img{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:6px;max-height:none;background:#000}
+.clipgrid .n{position:absolute;left:4px;top:4px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:0 5px;border-radius:4px}
+.clipgrid .used img{outline:2px solid var(--accent)}
+.clipgrid .bad img{opacity:.35}
+.beats td{font-size:13px}
 .linkrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .linkrow input{flex:1}
 .linkrow .kind{font-size:12px;min-width:74px;text-align:center}
@@ -89,12 +96,18 @@ td textarea{min-height:50px}
   <!-- NEW -->
   <section id="tab-new">
     <div class="panel">
-      <div class="seg" id="srcseg"><button data-src="library" class="on">From Ad Library</button><button data-src="upload">Upload files</button></div>
+      <div class="seg" id="srcseg"><button data-src="library" class="on">From Ad Library</button><button data-src="upload">Upload ads</button><button data-src="build">Build from my clips</button></div>
       <form id="newform">
         <div class="field" data-for="library">
           <label>Ad Library links: one ad (…/ads/library/?id=123…) or a page view (…&amp;view_all_page_id=…, top N ads)</label>
           <div id="links"></div>
           <button type="button" class="btn small ghost" id="addlink" style="margin-top:8px">＋ Add another link</button>
+        </div>
+        <div class="hidden" data-for="build">
+          <p class="hint" style="margin-top:0">Upload around 5 raw product videos. Cloner cuts them into scenes, Claude works out what each clip shows, writes or uses your script, records the voiceover, matches the best clip to every line and renders the finished ad with captions.</p>
+          <div class="field"><label>Your product videos (up to 12; mp4, mov, webm)</label><input type="file" name="bfiles" multiple accept="video/*" /></div>
+          <div class="field"><label>What is the product? (name, what it does, who it is for)</label><input type="text" name="product" placeholder="e.g. Glow board: kids draw with a light pen, no paint, no mess" /></div>
+          <div class="field"><label>Script (optional: leave empty and Claude writes it; any language, it is translated)</label><textarea name="script" placeholder="Paste a voiceover script, e.g. the script of a cloned ad"></textarea></div>
         </div>
         <div class="field hidden" data-for="upload">
           <label>Ad images or videos (up to 10)</label>
@@ -169,6 +182,7 @@ $$("#srcseg button").forEach(b => b.onclick = () => {
   src = b.dataset.src;
   $$("#srcseg button").forEach(x => x.classList.toggle("on", x === b));
   $$("[data-for]").forEach(el => el.classList.toggle("hidden", el.dataset.for !== src));
+  $("#go").textContent = src === "build" ? "Build ad" : "Clone ads";
 });
 
 async function health() {
@@ -227,6 +241,13 @@ $("#newform").onsubmit = async e => {
       if (!urls.length) throw new Error("Add at least one Ad Library link.");
       job = await api("/api/jobs", {method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({...common, urls, count: +f.count.value})});
+    } else if (src === "build") {
+      if (!f.bfiles.files.length) throw new Error("Choose your product videos.");
+      const fd = new FormData();
+      [...f.bfiles.files].forEach(x => fd.append("files", x));
+      for (const [k, v] of Object.entries({...common, product: f.product.value, script: f.script.value})) fd.append(k, v);
+      $("#newmsg").textContent = "Uploading videos…";
+      job = await api("/api/jobs/build", {method:"POST", body: fd});
     } else {
       if (!f.files.files.length) throw new Error("Choose at least one file.");
       const fd = new FormData();
@@ -278,6 +299,7 @@ function linkTitle(u) {
 }
 function jobTitle(inp) {
   const urls = inp.urls && inp.urls.length ? inp.urls : (inp.url ? [inp.url] : []);
+  if (inp.mode === "build") return "Ad from my clips" + (inp.product ? ": " + inp.product : "");
   if (!urls.length) return "Uploaded files";
   return urls.length === 1 ? linkTitle(urls[0]) : `${linkTitle(urls[0])} + ${urls.length - 1} more`;
 }
@@ -319,6 +341,12 @@ async function showJob(id) {
 }
 async function loadJobsQuiet(){ const list = await api("/api/jobs"); $$(".jobitem").forEach(el => { const j = list.find(x=>x.id===el.dataset.id); if (j) el.querySelector(".pill").className = "pill " + j.status, el.querySelector(".pill").textContent = j.status; }); }
 
+function clipGrid(job, ad) {
+  if (!ad.clips || !ad.clips.length) return `<div class="empty">${esc(ad.step)}</div>`;
+  const used = new Set((ad.cuts || []).map(c => c.clip));
+  return `<div class="clipgrid">${ad.clips.map(c => `<figure class="${used.has(c.id) ? "used" : ""} ${c.usable === false ? "bad" : ""}" title="${esc((c.description || "") + " · " + c.dur + "s")}"><img src="${fileUrl(job, c.thumb)}" loading="lazy" alt="" /><span class="n">${c.id}</span></figure>`).join("")}</div>`;
+}
+
 function renderAd(job, ad) {
   const key = job.id + ":" + ad.idx;
   let card = $(`#ad-${ad.idx}`);
@@ -331,8 +359,8 @@ function renderAd(job, ad) {
     ${busy ? `<div class="bar"><i style="width:${ad.progress||2}%"></i></div><div class="hint">${esc(ad.step)}</div>` : ""}
     ${ad.error ? `<div class="err">${esc(ad.error)}</div>` : ""}
     <div class="media">
-      <figure><figcaption>Original</figcaption>${ad.source ? mediaEl(job, ad.source, ad.kind) : `<div class="empty">${esc(ad.step)}</div>`}</figure>
-      <figure><figcaption>Clone · ${esc(job.input.language)}</figcaption>${ad.output ? mediaEl(job, ad.output, ad.kind) : `<div class="empty">${busy ? esc(ad.step) : "Not rendered"}</div>`}</figure>
+      <figure><figcaption>${ad.mode === "build" ? `Your clips${ad.clips && ad.clips.length ? " · " + ad.clips.length : ""} (outlined = used)` : "Original"}</figcaption>${ad.mode === "build" ? clipGrid(job, ad) : ad.source ? mediaEl(job, ad.source, ad.kind) : `<div class="empty">${esc(ad.step)}</div>`}</figure>
+      <figure><figcaption>${ad.mode === "build" ? "Your ad" : "Clone"} · ${esc(job.input.language)}</figcaption>${ad.output ? mediaEl(job, ad.output, ad.kind) : `<div class="empty">${busy ? esc(ad.step) : "Not rendered"}</div>`}</figure>
     </div>
     ${ad.output ? `<a class="btn small" href="${fileUrl(job, ad.output)}" download>Download ${ad.kind}</a>` : ""}`;
   if (!card) {
@@ -341,7 +369,7 @@ function renderAd(job, ad) {
     $("#ads").appendChild(card);
   }
   // keep the editor intact while the user types
-  const sig = JSON.stringify([ad.status, ad.progress, ad.step, ad.output, ad.error, ad.source]);
+  const sig = JSON.stringify([ad.status, ad.progress, ad.step, ad.output, ad.error, ad.source, (ad.clips || []).length, (ad.clips || []).filter(c => c.description).length, (ad.cuts || []).length]);
   if (card.dataset.sig === sig) return;
   card.dataset.sig = sig;
   const keepEditor = editing.has(key) && card.querySelector(".editor");
@@ -361,6 +389,7 @@ function editor(job, ad) {
         <div class="field"><label>End card lines (one per line)</label><textarea data-end>${esc((ad.plan.end_card_lines||[]).join("\n"))}</textarea></div>
         <div class="field"><label>End card button</label><input type="text" data-cta value="${esc(ad.plan.end_card_cta||"")}" /></div>
       </div>
+      ${ad.beats && ad.beats.length ? `<details><summary>Which clip plays on which line</summary><table class="beats">${ad.beats.map(b => `<tr><td>${esc(b.text)}</td><td class="hint" style="white-space:nowrap">clip ${b.clips.join(", ")}</td></tr>`).join("")}</table></details>` : ""}
       ${ad.plan.source_transcript ? `<details><summary>Original transcript</summary><p class="hint">${esc(ad.plan.source_transcript)}</p></details>` : ""}`;
   } else {
     specific = `<div class="field"><label>Text on the image (edit the translation or the box in pixels)</label>
@@ -375,7 +404,7 @@ function editor(job, ad) {
     <div class="grid2">${copyField("headline","Headline")}${copyField("description","Description")}</div>
     ${copyField("cta","Button")}
     ${specific}
-    <div class="row"><button type="button" class="btn" data-rerender>${ad.kind==="video" ? "Save & re-record + re-render" : "Save & re-render image"}</button><span class="hint" data-msg></span></div>
+    <div class="row"><button type="button" class="btn" data-rerender>${ad.mode === "build" ? "Save & rebuild with this script" : ad.kind==="video" ? "Save & re-record + re-render" : "Save & re-render image"}</button>${ad.mode === "build" ? `<button type="button" class="btn ghost" data-newscript>New script, new ad</button>` : ""}<span class="hint" data-msg></span></div>
   </details>`;
 }
 
@@ -386,6 +415,13 @@ function wireEditor(job, ad, card) {
     const el = card.querySelector(`[data-copy="${b.dataset.cp}"]`);
     navigator.clipboard.writeText(el.value).then(() => { b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy", 1200); });
   });
+  const nb = card.querySelector("[data-newscript]");
+  if (nb) nb.onclick = async () => {
+    nb.disabled = true;
+    try { await api(`/api/jobs/${job.id}/ads/${ad.idx}/rerender`, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({new_script: true})});
+      editing.delete(key); card.dataset.sig = ""; showJob(job.id);
+    } catch (e) { card.querySelector("[data-msg]").textContent = e.message; nb.disabled = false; }
+  };
   const rb = card.querySelector("[data-rerender]");
   if (!rb) return;
   rb.onclick = async () => {

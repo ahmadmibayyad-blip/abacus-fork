@@ -20,6 +20,21 @@ In the **Jobs** tab you can edit the script, end card, copy or image text, then 
 
 You can also skip the Ad Library and **upload** your own ad images or videos.
 
+## Build from my clips
+
+The third mode on **New clone** makes a new ad from your own raw product videos, so nothing in it is someone else's footage.
+
+1. Upload around 5 product videos (up to 12) and say what the product is.
+2. Optionally paste a script. It can be in any language, for example the script of an ad you cloned. Leave it empty and Claude writes one.
+3. Press **Build ad**. Cloner then:
+   - cuts every video into scenes (up to 60 clips),
+   - has Claude look at each clip and note what it shows, and skip unusable ones,
+   - writes or translates the script and records the voiceover,
+   - has Claude pick the best clip for every spoken line,
+   - cuts the montage in 9:16 and renders it with captions and an end card.
+
+The job page shows your clip library (clips used in the ad are outlined) and which clip plays on which line. **Save & rebuild with this script** applies your edits. **New script, new ad** has Claude write a different hook and angle and builds another ad from the same clips, without analysing them again.
+
 ## Requirements
 
 - Python 3.10+
@@ -78,11 +93,12 @@ cloner/
   ai.py         Claude Opus: video and image clone plans (structured outputs)
   voice.py      ElevenLabs speech-to-text and text-to-speech with timings
   compose.py    HyperFrames composition and render
+  builder.py    build an ad from your own clips: scenes, cut list, montage
   imagetext.py  replaces text on image ads
   media.py      ffmpeg helpers
   static/index.html  the web UI
 data/jobs/<id>/      everything a job produced (sources, plans, renders, HyperFrames projects)
-tests/smoke_test.py  offline end-to-end test (paid APIs stubbed, real ffmpeg and HyperFrames render)
+tests/               offline tests (paid APIs stubbed, real ffmpeg and HyperFrames render)
 ```
 
 ## Before you run the ads

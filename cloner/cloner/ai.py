@@ -72,6 +72,19 @@ def _rules(opts: dict) -> str:
     lang = opts.get("language", "Danish")
     brand = (opts.get("brand") or "").strip()
     offer = (opts.get("offer") or "").strip()
+    if opts.get("mode") == "build":
+        lines = [f"You are a direct-response creative strategist and video editor making Meta ads in {lang} "
+                 "from a seller's own raw product footage.",
+                 f"Write natively in {lang}: natural, spoken, persuasive."
+                 + (f' The brand is "{brand}".' if brand else "")]
+        if offer:
+            lines.append(f"The seller's offer is: {offer}. Do not invent other prices, discounts, guarantees or shipping terms.")
+        else:
+            lines.append("No offer was given: do not invent prices, discounts, guarantees or shipping terms.")
+        if opts.get("safe_claims", True):
+            lines.append("Avoid claims a regulator or Meta's ad review would reject: unverifiable numbers, medical or "
+                         "health cures, guaranteed results, before/after promises. Phrase benefits as appearance or feel.")
+        return "\n".join(lines)
     lines = [
         f"You localize a competitor's winning Meta ad into {lang} for a different seller who sells a similar product.",
         f"Write natively in {lang} for that market: natural, spoken, persuasive, same structure, hook, pacing, angle and offer mechanics as the source. Do not translate word for word.",
@@ -174,3 +187,88 @@ call to action: {src_copy.get('cta', '')}
 2. ad_copy: localized post copy.
 3. changes: as instructed."""}]
     return _parse(content, ImagePlan, opts)
+
+
+# ---------- build an ad from the user's own clips ----------
+
+class ClipInfo(BaseModel):
+    id: int
+    description: str       # what is visible, one short sentence
+    shows: Literal["product_closeup", "product_in_use", "person_talking", "result", "unboxing", "lifestyle", "other"]
+    has_burned_text: bool  # captions/logos/watermarks baked into the footage
+    usable: bool           # false for blurry, black, or irrelevant footage
+
+
+class ClipLibrary(BaseModel):
+    product_summary: str
+    clips: List[ClipInfo]
+
+
+class BuildScript(BaseModel):
+    voiceover: str
+    ad_copy: AdCopy
+    end_card_lines: List[str]
+    end_card_cta: str
+    changes: List[str]
+
+
+class Assignment(BaseModel):
+    segment: int
+    clip_ids: List[int]
+
+
+class Matching(BaseModel):
+    assignments: List[Assignment]
+
+
+def describe_clips(clips: list[dict], thumbs_dir: Path, product: str, opts: dict) -> ClipLibrary:
+    content = []
+    for c in clips:
+        content.append({"type": "text", "text": f"Clip {c['id']} ({c['dur']:.1f}s, from {c['file']}):"})
+        content.append(_img_block(thumbs_dir / c["thumb"]))
+    content.append({"type": "text", "text": f"""Above is one frame from each of {len(clips)} clips cut from a seller's raw product videos.
+Product notes from the seller: {product or "(none given)"}
+
+For every clip id, say what is visible (in English, one short concrete sentence an editor could match to a script line), classify it, flag burned-in text, and mark unusable footage. Then summarise the product in one or two sentences: what it is and what it does, judging from the footage and the notes. Return every clip id exactly once."""})
+    return _parse(content, ClipLibrary, opts)
+
+
+def write_build_script(library: dict, product: str, script: str, previous: list[str], opts: dict) -> BuildScript:
+    lang = opts.get("language", "Danish")
+    clip_lines = "\n".join(f"- {c['description']} ({c['shows']})" for c in library["clips"] if c.get("usable", True))
+    if script.strip():
+        task = f"""The seller supplied this script. Use it as the voiceover: keep its content and order, translate it into {lang} if it is in another language, and only fix what the rules require.
+<script>
+{script.strip()}
+</script>"""
+    else:
+        task = f"""Write the voiceover for a 25-35 second vertical UGC-style ad in {lang}: a scroll-stopping hook in the first sentence, the problem, how the product solves it, 2-3 concrete benefits that the footage can show, the offer if one is given, and a short call to action. Short spoken sentences. Plain text, no stage directions or emojis. Only claim what the footage and notes support."""
+        if previous:
+            task += "\nEarlier scripts for this product (write a clearly different hook and angle):\n" + "\n".join(f"<earlier>{p}</earlier>" for p in previous[-3:])
+    content = [{"type": "text", "text": f"""Product: {library.get('product_summary', '')}
+Seller's notes: {product or "(none)"}
+
+Footage available (the ad will be cut from these clips, so write lines that these shots can illustrate):
+{clip_lines}
+
+{task}
+
+Also return: ad_copy for the Meta post in {lang} (primary text, headline, description, button label), end_card_lines (2-4 short lines for the closing offer card, largest first), end_card_cta (short button text), and changes (anything you altered or left out because of the rules; empty if nothing)."""}]
+    return _parse(content, BuildScript, opts)
+
+
+def match_clips(segs: list[dict], clips: list[dict], opts: dict) -> Matching:
+    seg_lines = "\n".join(f"{s['i']}: ({s['dur']:.1f}s) {s['text']}" for s in segs)
+    clip_lines = "\n".join(f"{c['id']}: ({c['dur']:.1f}s, {c.get('shows', 'other')}"
+                           f"{', has burned-in text' if c.get('has_burned_text') else ''}) {c.get('description', '')}"
+                           for c in clips if c.get("usable", True))
+    content = [{"type": "text", "text": f"""You are editing a short vertical product ad. Pick footage for each voiceover beat.
+
+Voiceover beats (index: duration, text):
+{seg_lines}
+
+Clips (id: duration, type, what it shows):
+{clip_lines}
+
+For every beat return clip_ids: the clip that best illustrates what is being said, plus more clips if one is shorter than the beat (their durations should add up to at least the beat's duration). Rules: the first beat gets the most eye-catching clip; show the product in use when a benefit is described; do not reuse a clip unless you run out; prefer clips without burned-in text; keep variety by not putting look-alike clips back to back. Return every beat index exactly once."""}]
+    return _parse(content, Matching, opts)
