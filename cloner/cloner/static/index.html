@@ -103,12 +103,22 @@ td textarea{min-height:50px}
   <!-- NEW -->
   <section id="tab-new">
     <div class="panel">
-      <div class="seg" id="srcseg"><button data-src="library" class="on">From Ad Library</button><button data-src="upload">Upload ads</button><button data-src="build">Build from my clips</button></div>
+      <div class="seg" id="srcseg"><button data-src="library" class="on">From Ad Library</button><button data-src="upload">Upload ads</button><button data-src="build">Build from my clips</button><button data-src="generate">Generate new ad</button></div>
       <form id="newform">
         <div class="field" data-for="library">
           <label>Ad Library links: one ad (…/ads/library/?id=123…) or a page view (…&amp;view_all_page_id=…, top N ads)</label>
           <div id="links"></div>
           <button type="button" class="btn small ghost" id="addlink" style="margin-top:8px">＋ Add another link</button>
+        </div>
+        <div class="hidden" data-for="generate">
+          <p class="hint" style="margin-top:0">Makes an original ad with all-new footage of your product, so nothing is copied and there is no blurred text. Claude writes the script and a shot for every line, Higgsfield renders each first frame from your product photos and animates it, and Cloner adds the voiceover, captions and end card. Needs a Higgsfield API key (Settings).</p>
+          <div class="field"><label>Product photos (1-4; clean shots without text work best)</label><input type="file" name="gfiles" multiple accept="image/*" /></div>
+          <div class="field"><label>What is the product? (name, what it does, who it is for)</label><input type="text" name="gproduct" placeholder="e.g. Seamless high-waist 3D leggings, soft thick knit, for everyday and training" /></div>
+          <div class="grid2">
+            <div class="field"><label>Caption style</label><select name="gcaption"><option value="bold_upper">Bold pop (uppercase, highlight word)</option><option value="clean">Clean (thin white)</option><option value="none">No captions</option></select></div>
+            <div class="field"><label>Number of ads (each gets a different script and angle)</label><input type="number" name="gvariations" value="1" min="1" max="5" /></div>
+          </div>
+          <div class="field"><label>Script (optional: paste one, e.g. from a cloned ad, or leave empty and Claude writes it)</label><textarea name="gscript"></textarea></div>
         </div>
         <div class="hidden" data-for="build">
           <p class="hint" style="margin-top:0">Upload around 5 raw product videos. Cloner cuts them into scenes, Claude works out what each clip shows, writes or uses your script, records the voiceover, matches the best clip to every line and renders the finished ad with captions.</p>
@@ -156,6 +166,17 @@ td textarea{min-height:50px}
           <div class="field"><label>ElevenLabs API key <span id="s-ELEVENLABS_API_KEY" class="pill"></span></label><input type="password" name="ELEVENLABS_API_KEY" autocomplete="off" /></div>
           <div class="field"><label>Apify token <span id="s-APIFY_TOKEN" class="pill"></span></label><input type="password" name="APIFY_TOKEN" autocomplete="off" /></div>
           <div class="field"><label>Claude model</label><input type="text" name="CLAUDE_MODEL" /></div>
+          <div class="field" style="grid-column:1/-1;margin:6px 0 0"><b>Generate new ad</b> <span class="hint">· images and video by Higgsfield (one key). Gemini is an optional image provider.</span></div>
+          <div class="field"><label>Higgsfield API key ID <span id="s-HIGGSFIELD_KEY_ID" class="pill"></span> <span class="hint">console.higgsfield.ai</span></label><input type="password" name="HIGGSFIELD_KEY_ID" autocomplete="off" /></div>
+          <div class="field"><label>Higgsfield API key secret <span id="s-HIGGSFIELD_KEY_SECRET" class="pill"></span></label><input type="password" name="HIGGSFIELD_KEY_SECRET" autocomplete="off" /></div>
+          <div class="field"><label>Gemini API key (optional) <span id="s-GEMINI_API_KEY" class="pill"></span> <span class="hint">aistudio.google.com</span></label><input type="password" name="GEMINI_API_KEY" autocomplete="off" /></div>
+          <div class="field"><label>Image provider</label><select name="IMAGE_PROVIDER"><option value="higgsfield">Higgsfield image model</option><option value="gemini">Gemini (Nano Banana, needs a Gemini key)</option></select></div>
+          <div class="field"><label>Gemini image model</label><input type="text" name="GEMINI_IMAGE_MODEL" /></div>
+          <div class="field"><label>Max cost per ad for generated shots (USD)</label><input type="text" name="GEN_MAX_USD" /></div>
+          <div class="field"><label>Higgsfield video model (API path)</label><input type="text" name="HF_VIDEO_MODEL" /></div>
+          <div class="field"><label>Video model settings (JSON)</label><input type="text" name="HF_VIDEO_PARAMS" /></div>
+          <div class="field"><label>Higgsfield image model (API path)</label><input type="text" name="HF_IMAGE_MODEL" /></div>
+          <div class="field"><label>Image model settings (JSON)</label><input type="text" name="HF_IMAGE_PARAMS" /></div>
           <div class="field"><label>Default ElevenLabs voice ID</label><input type="text" name="ELEVENLABS_VOICE_ID" /></div>
           <div class="field"><label>Default ElevenLabs model</label><input type="text" name="ELEVENLABS_MODEL_ID" /></div>
         </div>
@@ -192,7 +213,7 @@ $$("#srcseg button").forEach(b => b.onclick = () => {
   src = b.dataset.src;
   $$("#srcseg button").forEach(x => x.classList.toggle("on", x === b));
   $$("[data-for]").forEach(el => el.classList.toggle("hidden", el.dataset.for !== src));
-  $("#go").textContent = src === "build" ? "Build ad" : "Clone ads";
+  $("#go").textContent = src === "build" ? "Build ad" : src === "generate" ? "Generate ad" : "Clone ads";
 });
 
 async function health() {
@@ -251,6 +272,13 @@ $("#newform").onsubmit = async e => {
       if (!urls.length) throw new Error("Add at least one Ad Library link.");
       job = await api("/api/jobs", {method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({...common, urls, count: +f.count.value})});
+    } else if (src === "generate") {
+      if (!f.gfiles.files.length) throw new Error("Choose 1-4 product photos.");
+      const fd = new FormData();
+      [...f.gfiles.files].forEach(x => fd.append("files", x));
+      for (const [k, v] of Object.entries({...common, product: f.gproduct.value, script: f.gscript.value, caption_style: f.gcaption.value, variations: f.gvariations.value})) fd.append(k, v);
+      $("#newmsg").textContent = "Uploading photos…";
+      job = await api("/api/jobs/generate", {method:"POST", body: fd});
     } else if (src === "build") {
       if (!f.bfiles.files.length) throw new Error("Choose your product videos.");
       const fd = new FormData();
@@ -275,7 +303,7 @@ async function loadSettings() {
   const s = await api("/api/settings");
   for (const [k, v] of Object.entries(s)) {
     const pill = $("#s-" + k);
-    if (pill) { pill.textContent = v ? "set" : "missing"; pill.className = "pill " + (v ? "done" : "error"); }
+    if (pill) { const opt = k === "GEMINI_API_KEY"; pill.textContent = v ? "set" : opt ? "not set" : "missing"; pill.className = "pill " + (v ? "done" : opt ? "" : "error"); }
     else if ($("#setform")[k]) $("#setform")[k].value = v;
   }
 }
@@ -309,6 +337,7 @@ function linkTitle(u) {
 }
 function jobTitle(inp) {
   const urls = inp.urls && inp.urls.length ? inp.urls : (inp.url ? [inp.url] : []);
+  if (inp.mode === "generate") return "New ad" + (inp.product ? ": " + inp.product : "");
   if (inp.mode === "build") return "Ad from my clips" + (inp.product ? ": " + inp.product : "");
   if (!urls.length) return "Uploaded files";
   return urls.length === 1 ? linkTitle(urls[0]) : `${linkTitle(urls[0])} + ${urls.length - 1} more`;
@@ -359,6 +388,11 @@ function beatRow(job, ad, b) {
     <tr class="picker" data-picker="${b.i}"><td colspan="3"><div class="clipgrid">${options}</div></td></tr>`;
 }
 
+function shotGrid(job, ad) {
+  if (!ad.shots || !ad.shots.length) return `<div class="empty">${esc(ad.step)}</div>`;
+  return `<div class="clipgrid">${ad.shots.map(sh => `<figure class="${sh.clip ? "used" : ""}" title="${esc(sh.text)}">${sh.image ? `<img src="${fileUrl(job, sh.image)}" loading="lazy" alt="" />` : `<div class="empty" style="aspect-ratio:9/16;padding:4px;font-size:11px">…</div>`}<span class="n">${sh.i + 1}</span></figure>`).join("")}</div>`;
+}
+
 function clipGrid(job, ad) {
   if (!ad.clips || !ad.clips.length) return `<div class="empty">${esc(ad.step)}</div>`;
   const used = new Set((ad.cuts || []).map(c => c.clip));
@@ -377,8 +411,8 @@ function renderAd(job, ad) {
     ${busy ? `<div class="bar"><i style="width:${ad.progress||2}%"></i></div><div class="hint">${esc(ad.step)}</div>` : ""}
     ${ad.error ? `<div class="err">${esc(ad.error)}</div>` : ""}
     <div class="media">
-      <figure><figcaption>${ad.mode === "build" ? `Your clips${ad.clips && ad.clips.length ? " · " + ad.clips.length : ""} (outlined = used)` : "Original"}</figcaption>${ad.mode === "build" ? clipGrid(job, ad) : ad.source ? mediaEl(job, ad.source, ad.kind) : `<div class="empty">${esc(ad.step)}</div>`}</figure>
-      <figure><figcaption>${ad.mode === "build" ? "Your ad" : "Clone"} · ${esc(job.input.language)}</figcaption>${ad.output ? mediaEl(job, ad.output, ad.kind) : `<div class="empty">${busy ? esc(ad.step) : "Not rendered"}</div>`}</figure>
+      <figure><figcaption>${ad.mode === "generate" ? `Generated shots${ad.shots && ad.shots.length ? " · " + ad.shots.filter(x => x.clip).length + "/" + ad.shots.length : ""}${ad.est_usd != null ? " · est. $" + ad.est_usd : ""}` : ad.mode === "build" ? `Your clips${ad.clips && ad.clips.length ? " · " + ad.clips.length : ""} (outlined = used)` : "Original"}</figcaption>${ad.mode === "generate" ? shotGrid(job, ad) : ad.mode === "build" ? clipGrid(job, ad) : ad.source ? mediaEl(job, ad.source, ad.kind) : `<div class="empty">${esc(ad.step)}</div>`}</figure>
+      <figure><figcaption>${ad.mode === "build" || ad.mode === "generate" ? "Your ad" : "Clone"} · ${esc(job.input.language)}</figcaption>${ad.output ? mediaEl(job, ad.output, ad.kind) : `<div class="empty">${busy ? esc(ad.step) : "Not rendered"}</div>`}</figure>
     </div>
     ${ad.output ? `<a class="btn small" href="${fileUrl(job, ad.output)}" download>Download ${ad.kind}</a>` : ""}`;
   if (!card) {
@@ -387,7 +421,7 @@ function renderAd(job, ad) {
     $("#ads").appendChild(card);
   }
   // keep the editor intact while the user types
-  const sig = JSON.stringify([ad.status, ad.progress, ad.step, ad.output, ad.error, ad.source, (ad.clips || []).length, (ad.clips || []).filter(c => c.description).length, (ad.cuts || []).length]);
+  const sig = JSON.stringify([ad.status, ad.progress, ad.step, ad.output, ad.error, ad.source, (ad.clips || []).length, (ad.clips || []).filter(c => c.description).length, (ad.cuts || []).length, (ad.shots || []).map(x => (x.image ? 1 : 0) + (x.clip ? 2 : 0)).join("")]);
   if (card.dataset.sig === sig) return;
   card.dataset.sig = sig;
   const keepEditor = editing.has(key) && card.querySelector(".editor");
@@ -408,7 +442,8 @@ function editor(job, ad) {
         <div class="field"><label>End card button</label><input type="text" data-cta value="${esc(ad.plan.end_card_cta||"")}" /></div>
       </div>
       ${ad.beats && ad.beats.length ? `<details open><summary>Which clip plays on which line (swap any you don't like)</summary><table class="beats">${ad.beats.map(b => beatRow(job, ad, b)).join("")}</table></details>` : ""}
-      ${ad.mode === "build" ? `<div class="field" style="margin-top:12px"><label>Caption style</label><select data-capstyle>${[["bold_upper","Bold pop (uppercase, highlight word)"],["clean","Clean (thin white)"],["none","No captions"]].map(([v,l]) => `<option value="${v}" ${ad.plan.captions && ad.plan.captions.style === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>` : ""}
+      ${ad.mode === "generate" && ad.shots && ad.shots.length ? `<details open><summary>Shots (edit a description or tick Redo, then Save & rebuild)</summary><table class="beats">${ad.shots.map(sh => `<tr data-shot="${sh.i}"><td style="width:26%">${esc(sh.text)}</td><td style="width:44px">${sh.image ? `<div class="bt"><img src="${fileUrl(job, sh.image)}" alt="" /></div>` : ""}</td><td><textarea data-shotprompt style="min-height:70px;font-size:12px">${esc(sh.image_prompt)}</textarea></td><td style="white-space:nowrap"><label class="row" style="color:var(--ink);margin:0"><input type="checkbox" data-regen /> Redo</label></td></tr>`).join("")}</table></details>` : ""}
+      ${ad.mode === "build" || ad.mode === "generate" ? `<div class="field" style="margin-top:12px"><label>Caption style</label><select data-capstyle>${[["bold_upper","Bold pop (uppercase, highlight word)"],["clean","Clean (thin white)"],["none","No captions"]].map(([v,l]) => `<option value="${v}" ${ad.plan.captions && ad.plan.captions.style === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>` : ""}
       ${ad.plan.source_transcript ? `<details><summary>Original transcript</summary><p class="hint">${esc(ad.plan.source_transcript)}</p></details>` : ""}`;
   } else {
     specific = `<div class="field"><label>Text on the image (edit the translation or the box in pixels)</label>
@@ -423,13 +458,13 @@ function editor(job, ad) {
     <div class="grid2">${copyField("headline","Headline")}${copyField("description","Description")}</div>
     ${copyField("cta","Button")}
     ${specific}
-    <div class="row"><button type="button" class="btn" data-rerender>${ad.mode === "build" ? "Save & rebuild" : ad.kind==="video" ? "Save & re-record + re-render" : "Save & re-render image"}</button>${ad.mode === "build" ? `<button type="button" class="btn ghost" data-newtake>Another voice take</button><button type="button" class="btn ghost" data-newscript>New script, new ad</button>` : ""}<span class="hint" data-msg></span></div>
+    <div class="row"><button type="button" class="btn" data-rerender>${ad.mode === "build" || ad.mode === "generate" ? "Save & rebuild" : ad.kind==="video" ? "Save & re-record + re-render" : "Save & re-render image"}</button>${ad.mode === "build" || ad.mode === "generate" ? `<button type="button" class="btn ghost" data-newtake>Another voice take</button><button type="button" class="btn ghost" data-newscript>New script, new ad</button>` : ""}<span class="hint" data-msg></span></div>
   </details>`;
 }
 
 function wireEditor(job, ad, card) {
   const key = job.id + ":" + ad.idx;
-  card.querySelectorAll(".editor textarea, .editor input, .editor select").forEach(el => el.addEventListener("input", () => editing.add(key)));
+  card.querySelectorAll(".editor textarea, .editor input, .editor select").forEach(el => { el.addEventListener("input", () => editing.add(key)); el.addEventListener("change", () => editing.add(key)); });
   card.querySelectorAll("[data-cp]").forEach(b => b.onclick = () => {
     const el = card.querySelector(`[data-copy="${b.dataset.cp}"]`);
     navigator.clipboard.writeText(el.value).then(() => { b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy", 1200); });
@@ -461,6 +496,15 @@ function wireEditor(job, ad, card) {
       body.voiceover = card.querySelector("[data-vo]").value;
       body.end_card_lines = card.querySelector("[data-end]").value.split("\n").map(s=>s.trim()).filter(Boolean);
       body.end_card_cta = card.querySelector("[data-cta]").value;
+      if (ad.mode === "generate") {
+        body.regen_shots = []; body.shot_prompts = {};
+        card.querySelectorAll("tr[data-shot]").forEach(tr => {
+          const k = +tr.dataset.shot, sh = ad.shots.find(x => x.i === k), t = tr.querySelector("[data-shotprompt]").value;
+          if (tr.querySelector("[data-regen]").checked) body.regen_shots.push(k);
+          if (sh && t.trim() !== sh.image_prompt) body.shot_prompts[k] = t;
+        });
+        const cs = card.querySelector("[data-capstyle]"); if (cs) body.caption_style = cs.value;
+      }
       if (ad.mode === "build") { body.swaps = swaps; const cs = card.querySelector("[data-capstyle]"); if (cs) body.caption_style = cs.value; }
     } else {
       body.blocks = ad.plan.blocks.map((b, i) => {

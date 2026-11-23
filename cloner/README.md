@@ -20,6 +20,39 @@ In the **Jobs** tab you can edit the script, end card, copy or image text, then 
 
 You can also skip the Ad Library and **upload** your own ad images or videos.
 
+## Generate new ad
+
+The fourth mode makes an original ad with all-new footage of your product. Nothing is copied from another advertiser, and there is no blurred text.
+
+1. Upload 1-4 product photos and say what the product is.
+2. Optionally paste a script, for example the script of an ad you cloned. Leave it empty and Claude writes one.
+3. Choose how many ads you want (1-5). Each gets a different script and angle.
+4. Press **Generate ad**. Cloner then:
+   - has Claude write the script and record it with ElevenLabs,
+   - has Claude plan one shot for every spoken line,
+   - renders the first frame of each shot with an image model, using your product photos as reference,
+   - animates each frame with a Higgsfield video model,
+   - cuts the shots to the voiceover and adds captions and an end card.
+
+On the job page you can edit a shot's description or tick **Redo** to make that shot again; the other shots and the voiceover are kept. **Another voice take** and **New script, new ad** work as in Build from my clips.
+
+**What it needs (Settings tab)**
+
+- **Higgsfield API key ID and secret**, from console.higgsfield.ai. Costs are charged in dollars to your Higgsfield Console balance. This is separate from the credits of the Higgsfield web app.
+- Optional: a **Gemini API key** if you set the image provider to Gemini (Nano Banana). By default Higgsfield makes the images too, so one key is enough.
+
+**Defaults**
+
+| Setting | Default |
+|---|---|
+| Image provider | Higgsfield |
+| Higgsfield image model | `xai/grok-imagine-image-2.0` (accepts product reference images) |
+| Higgsfield video model | `xai/grok-imagine-video/v1.5/reference-to-video` |
+| Gemini image model | `gemini-nano-banana-2.1` |
+| Max cost per ad | $5. Before generating, Cloner asks Higgsfield for a price estimate and stops if it is above this. |
+
+To use another Higgsfield model, paste its API path from its page on docs.higgsfield.ai and adjust the JSON settings to that model's parameters.
+
 ## Build from my clips
 
 The third mode on **New clone** makes a new ad from your own raw product videos, so nothing in it is someone else's footage.
@@ -52,7 +85,7 @@ On the **New clone** tab, the voice list shows the voices in your ElevenLabs acc
 - Node.js 22+ (for HyperFrames)
 - ffmpeg
 - Google Chrome (HyperFrames renders with it)
-- API keys:
+- API keys (Anthropic and ElevenLabs for every mode; the others only for the modes named):
   - **Anthropic**: Claude Opus writes the clones (`claude-opus-5-5`)
   - **ElevenLabs**: speech-to-text and voiceover
   - **Apify**: reads the Ad Library through the `curious_coder/facebook-ads-library-scraper` actor. Not needed for uploads.
@@ -104,6 +137,7 @@ cloner/
   ai.py         Claude Opus: video and image clone plans (structured outputs)
   voice.py      ElevenLabs speech-to-text and text-to-speech with timings
   compose.py    HyperFrames composition and render
+  gen.py        Higgsfield and Gemini requests for the Generate new ad mode
   builder.py    build an ad from your own clips: scenes, cut list, montage
   imagetext.py  replaces text on image ads
   media.py      ffmpeg helpers

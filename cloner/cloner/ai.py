@@ -72,9 +72,11 @@ def _rules(opts: dict) -> str:
     lang = opts.get("language", "Danish")
     brand = (opts.get("brand") or "").strip()
     offer = (opts.get("offer") or "").strip()
-    if opts.get("mode") == "build":
+    if opts.get("mode") in ("build", "generate"):
         lines = [f"You are a direct-response creative strategist and video editor making Meta ads in {lang} "
-                 "from a seller's own raw product footage.",
+                 + ("from a seller's own raw product footage." if opts.get("mode") == "build" else
+                    "with newly generated footage of the seller's product. The ad must be original: never copy "
+                    "another brand's wording, shots, people or look."),
                  f"Write natively in {lang}: natural, spoken, persuasive."
                  + (f' The brand is "{brand}".' if brand else "")]
         if offer:
@@ -276,3 +278,64 @@ Clips (id: duration, type, what it shows):
 
 For every beat return clip_ids: the clip that best illustrates what is being said, plus more clips if one is shorter than the beat (their durations should add up to at least the beat's duration). Rules: the first beat gets the most eye-catching clip; show the product in use when a benefit is described; do not reuse a clip unless you run out; prefer clips without burned-in text; keep variety by not putting look-alike clips back to back. Return every beat index exactly once."""}]
     return _parse(content, Matching, opts)
+
+
+# ---------- generate a new ad (new footage from Gemini + Higgsfield) ----------
+
+class Shot(BaseModel):
+    segment: int
+    image_prompt: str     # the first frame, as a photo description
+    motion_prompt: str    # what moves in the 3-6 second clip
+    shows_product: bool
+
+
+class ShotList(BaseModel):
+    shots: List[Shot]
+
+
+def _photo_blocks(photos: list[Path]) -> list:
+    out = []
+    for p in photos[:4]:
+        media = "image/png" if p.suffix.lower() == ".png" else "image/webp" if p.suffix.lower() == ".webp" else "image/jpeg"
+        out.append(_img_block(p, media))
+    return out
+
+
+def write_gen_script(product: str, photos: list[Path], script: str, previous: list[str], opts: dict) -> BuildScript:
+    lang = opts.get("language", "Danish")
+    if script.strip():
+        task = f"""The seller supplied this script (it may be the script of an ad they liked). Keep its structure and angle, write it natively in {lang}, remove any other brand's name, and fix only what the rules require.
+<script>
+{script.strip()}
+</script>"""
+    else:
+        task = f"""Write the voiceover for a 20-30 second vertical UGC-style ad in {lang}: a scroll-stopping hook in the first sentence, the problem, how the product solves it, 2-3 concrete benefits that can be SHOWN on camera, the offer if one is given, and a short call to action."""
+        if previous:
+            task += "\nEarlier scripts for this product (write a clearly different hook and angle):\n" + "\n".join(f"<earlier>{p}</earlier>" for p in previous[-4:])
+    content = _photo_blocks(photos) + [{"type": "text", "text": f"""The images above are the seller's product photos.
+Seller's notes about the product: {product or "(none)"}
+
+{task}
+
+Every sentence becomes one 3-5 second video shot, so write 6-9 short spoken sentences of at most 12 words each. Plain text, no stage directions or emojis. Only claim what the photos and notes support.
+
+Also return: ad_copy for the Meta post in {lang} (primary text, headline, description, button label), end_card_lines (2-4 short lines for the closing offer card, largest first), end_card_cta (short button text), and changes (anything you altered or left out because of the rules; empty if nothing)."""}]
+    return _parse(content, BuildScript, opts)
+
+
+def plan_shots(segs: list[dict], product: str, photos: list[Path], opts: dict) -> ShotList:
+    beats = "\n".join(f"{s['i']}: ({s['dur']:.1f}s) {s['text']}" for s in segs)
+    content = _photo_blocks(photos) + [{"type": "text", "text": f"""The images above are the seller's product photos. Product notes: {product or "(none)"}
+
+Plan one video shot for every voiceover beat of a vertical 9:16 UGC-style ad. Each shot is made in two steps: an image model renders the first frame from your image_prompt (it also receives the product photos as reference), then a video model animates that frame using your motion_prompt.
+
+Voiceover beats (index: duration, text):
+{beats}
+
+For every beat return:
+- image_prompt (English, 50-90 words): a realistic smartphone photo that illustrates the line. Say who or what is in frame, the framing, the setting, the light. When the product is in the shot, describe it exactly as it looks in the product photos and write "the product from the reference image". End with: "Vertical 9:16, natural light, authentic UGC look. No text, no captions, no logos, no watermark."
+- motion_prompt (English, 20-40 words): one simple, physically plausible action plus slight handheld camera movement. Nobody speaks to camera. End with "No text, no captions."
+- shows_product: true if the product is visible.
+
+Rules: the first shot must stop the scroll; a "problem" line shows the problem WITHOUT the product; vary framing between neighbours (close-up, half body, hands, product alone, lifestyle); keep the same product look in every shot; use ordinary-looking adults; no brand names, no on-screen text, no medical or before/after imagery. Return every beat index exactly once."""}]
+    return _parse(content, ShotList, opts)

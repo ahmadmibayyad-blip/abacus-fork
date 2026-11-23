@@ -13,7 +13,10 @@ from pathlib import Path
 
 from PIL import Image
 
-from . import ai, builder, compose, imagetext, media, sources, voice
+from concurrent.futures import ThreadPoolExecutor
+import math
+
+from . import ai, builder, compose, config, gen, imagetext, media, sources, voice
 from .config import JOBS_DIR
 
 LANGUAGES = {
@@ -134,6 +137,34 @@ def create_build(opts: dict, files: list[tuple[str, bytes]]) -> dict:
     return load(job["id"])
 
 
+IMAGE_EXT = (".jpg", ".jpeg", ".png", ".webp")
+
+
+def create_generate(opts: dict, files: list[tuple[str, bytes]], n_ads: int = 1) -> dict:
+    """Ads with newly generated footage (Gemini/Higgsfield images, Higgsfield video) of the seller's product."""
+    opts["mode"] = "generate"
+    job = _new(opts)
+    pd = job_dir(job["id"]) / "product"
+    pd.mkdir(parents=True)
+    n = 0
+    for name, data in files:
+        ext = Path(name).suffix.lower()
+        if ext in IMAGE_EXT and n < 4:
+            n += 1
+            (pd / f"photo_{n:02d}{ext}").write_bytes(data)
+    ads = []
+    for k in range(max(1, min(n_ads, 5))):
+        rec = _ad_record(k, {"ad_id": f"Variation {k + 1}", "kind": "video", "media_url": None, "page_name": "",
+                             "library_url": "", "copy": {"primary_text": "", "headline": "", "description": "", "cta": ""}})
+        rec.update(mode="generate", shots=[], scripts=[])
+        if not n:
+            rec.update(status="error", error="Upload at least one product photo (jpg, png or webp).")
+        ads.append(rec)
+    update(job["id"], lambda j: j.update(ads=ads))
+    _q.put(("process", job["id"]))
+    return load(job["id"])
+
+
 MAX_ADS = 20
 
 
@@ -152,10 +183,18 @@ def _ad_record(i: int, ad: dict, source: str | None = None) -> dict:
 def queue_rerender(job_id: str, idx: int, payload: dict) -> None:
     def fn(j):
         a = j["ads"][idx]
-        if not a.get("source") and a.get("mode") != "build":
+        if not a.get("source") and a.get("mode") not in ("build", "generate"):
             raise ValueError("This ad has no downloaded media to re-render.")
         p = payload if a.get("plan") else {}
-        if a.get("mode") == "build" and a.get("plan"):
+        if a.get("mode") == "generate" and a.get("shots"):
+            for k, text in (p.get("shot_prompts") or {}).items():
+                k = int(k)
+                if 0 <= k < len(a["shots"]) and text.strip() and text.strip() != a["shots"][k]["image_prompt"]:
+                    a["shots"][k].update(image_prompt=text.strip(), image=None, clip=None)
+            for k in p.get("regen_shots") or []:
+                if 0 <= int(k) < len(a["shots"]):
+                    a["shots"][int(k)].update(image=None, clip=None)
+        if a.get("mode") in ("build", "generate") and a.get("plan"):
             a["new_script"] = bool(p.get("new_script"))
             changed = "voiceover" in p and p["voiceover"].strip() != (a["plan"].get("voiceover") or "").strip()
             a["redo_voice"] = bool(a["new_script"] or p.get("new_take") or changed)
@@ -237,10 +276,12 @@ def _run_process(job_id: str) -> None:
     update(job_id, lambda j: j.update(status="running", step="Cloning ads"))
     job = load(job_id)
     for i, a in enumerate(job["ads"]):
-        if a["status"] == "error" or (not a.get("source") and a.get("mode") != "build"):
+        if a["status"] == "error" or (not a.get("source") and a.get("mode") not in ("build", "generate")):
             continue
         try:
-            if a.get("mode") == "build":
+            if a.get("mode") == "generate":
+                _generate(job_id, i, fresh=True)
+            elif a.get("mode") == "build":
                 _build(job_id, i, fresh=True)
             elif a["kind"] == "video":
                 _video(job_id, i, fresh=True)
@@ -437,11 +478,151 @@ def _build(job_id: str, i: int, fresh: bool) -> None:
     set_ad(job_id, i, status="done", step="Done", progress=100, output=str(out.relative_to(root)))
 
 
+def _generate(job_id: str, i: int, fresh: bool) -> None:
+    """New ad with generated footage: script -> voice -> one shot per spoken line (image, then video)
+    -> montage -> captions and end card. Later runs redo only what changed."""
+    job = load(job_id)
+    a, opts = job["ads"][i], job["input"]
+    root = job_dir(job_id)
+    d = root / f"ad{i + 1}"
+    (d / "shots").mkdir(parents=True, exist_ok=True)
+    (d / "footage").mkdir(exist_ok=True)
+    photos = sorted((root / "product").glob("photo_*"))
+    set_ad(job_id, i, status="running", progress=3)
+
+    if fresh or a.get("new_script") or not a.get("plan"):
+        set_ad(job_id, i, step="Claude is writing the script", progress=5)
+        given = "" if (a.get("new_script") or i > 0) else opts.get("script", "")
+        earlier = [sc for other in load(job_id)["ads"] for sc in (other.get("scripts") or [])]
+        plan = ai.write_gen_script(opts.get("product", ""), photos, given, earlier, opts).model_dump()
+        style = (a.get("plan") or {}).get("captions", {}).get("style") or opts.get("caption_style") or "bold_upper"
+        plan["captions"] = {"present": False, "x_pct": 0, "y_pct": 0, "w_pct": 0, "h_pct": 0,
+                            "style": style, "highlight_color": "#ff8bc3"}
+        set_ad(job_id, i, plan=plan, ad_copy=plan["ad_copy"], changes=plan["changes"], new_script=False,
+               redo_voice=True, scripts=(a.get("scripts") or []) + [plan["voiceover"]], progress=10)
+        a = load(job_id)["ads"][i]
+    plan = a["plan"]
+
+    vo, words_file = d / "vo_cut.wav", d / "words.json"
+    if fresh or a.get("redo_voice") or not (vo.exists() and words_file.exists() and a.get("shots")):
+        set_ad(job_id, i, step="Recording the voiceover", progress=12)
+        raw = d / "vo_raw.mp3"
+        words = voice.speak(plan["voiceover"], raw, voice_id=opts.get("voice_id") or None,
+                            model_id=opts.get("model_id") or None)
+        if not words:
+            raise voice.VoiceError("The voiceover came back without timings.")
+        start, end = max(words[0][0] - 0.05, 0), words[-1][1] + 0.2
+        media.cut_audio(raw, vo, start, end)
+        words = [[w0 - start, w1 - start, t] for w0, w1, t in words]
+        words_file.write_text(json.dumps(words, ensure_ascii=False), encoding="utf-8")
+        set_ad(job_id, i, step="Claude is planning the shots", progress=16)
+        segs = builder.segments(words, max_len=4.2)
+        planned = {sh["segment"]: sh for sh in ai.plan_shots(segs, opts.get("product", ""), photos, opts).model_dump()["shots"]}
+        shots = []
+        for sg in segs:
+            sh = planned.get(sg["i"])
+            if not sh:
+                raise ai.AIError("Claude did not plan a shot for every line; press Re-render.")
+            shots.append({"i": sg["i"], "text": sg["text"], "dur": sg["dur"], "image_prompt": sh["image_prompt"],
+                          "motion_prompt": sh["motion_prompt"], "shows_product": sh["shows_product"],
+                          "image": None, "clip": None})
+        set_ad(job_id, i, shots=shots, redo_voice=False, progress=20)
+        a = load(job_id)["ads"][i]
+    words = json.loads(words_file.read_text(encoding="utf-8"))
+    segs = builder.segments(words, max_len=4.2)
+    segs[0]["dur"] = round(segs[0]["dur"] + 0.15, 2)
+    shots = a["shots"]
+    todo = [sh["i"] for sh in shots if not sh.get("clip") or not (root / sh["clip"]).exists()]
+
+    def clip_secs(sh: dict) -> int:
+        return int(min(max(math.ceil(sh["dur"] + 0.5), 3), 10))
+
+    if todo:
+        # cost check before spending anything
+        per = [gen.hf_estimate(config.get("HF_VIDEO_MODEL"), gen.video_body(shots[k]["motion_prompt"],
+                               "https://example.com/first-frame.jpg", clip_secs(shots[k]))) for k in todo[:1]]
+        est = round(per[0] * len(todo), 2) if per and per[0] is not None else None
+        if est is not None and config.get("IMAGE_PROVIDER") != "gemini":
+            img_usd = gen.hf_estimate(config.get("HF_IMAGE_MODEL"), dict({"prompt": shots[todo[0]]["image_prompt"]},
+                                      **gen._json_setting("HF_IMAGE_PARAMS")))
+            n_img = sum(1 for k in todo if not shots[k].get("image"))
+            est = round(est + (img_usd or 0) * n_img, 2)
+        limit = float(config.get("GEN_MAX_USD") or 0)
+        set_ad(job_id, i, est_usd=est)
+        if est is not None and limit and est > limit:
+            raise gen.GenError(f"The shots for this ad would cost about ${est:.2f}, above your limit of "
+                               f"${limit:.2f} (Settings: 'Max cost per ad'). Raise the limit and press Re-render.")
+        ref_urls = []
+        if config.get("IMAGE_PROVIDER") != "gemini":
+            ref_urls = load(job_id).get("product_urls") or [gen.hf_upload(p) for p in photos]
+            update(job_id, lambda j: j.update(product_urls=ref_urls))
+        done = [0]
+
+        def make(k: int) -> None:
+            sh = load(job_id)["ads"][i]["shots"][k]
+            stamp = int(time.time() * 1000)
+            img = sh.get("image") and (root / sh["image"])
+            if not img or not img.exists():
+                img = gen.image(sh["image_prompt"], photos if sh["shows_product"] else [],
+                                ref_urls if sh["shows_product"] else [], d / "shots" / f"s{k:02d}_{stamp}.jpg")
+                update(job_id, lambda j: j["ads"][i]["shots"][k].update(image=str(img.relative_to(root))))
+            clip = gen.video(sh["motion_prompt"], gen.hf_upload(img), clip_secs(sh), d / "footage" / f"s{k:02d}_{stamp}.mp4")
+            done[0] += 1
+            def fn(j):
+                j["ads"][i]["shots"][k].update(clip=str(clip.relative_to(root)))
+                j["ads"][i].update(progress=20 + int(40 * done[0] / len(todo)),
+                                   step=f"Generating shots ({done[0]} of {len(todo)} done)")
+            update(job_id, fn)
+
+        set_ad(job_id, i, step=f"Generating {len(todo)} shots (image, then video)", progress=21)
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            errors = [e for e in pool.map(lambda k: _try(make, k), todo) if e]
+        if errors:
+            raise gen.GenError(f"{len(errors)} of {len(todo)} shots failed. First error: {errors[0]} "
+                               "Finished shots are kept; press Re-render to retry the rest.")
+        a = load(job_id)["ads"][i]
+        shots = a["shots"]
+
+    set_ad(job_id, i, step="Cutting the montage", progress=62, thumb=shots[0]["image"])
+    clips = []
+    for sh in shots:
+        f = root / sh["clip"]
+        clips.append({"id": sh["i"], "file": f.name, "start": 0.1, "dur": round(media.probe(f)["duration"] - 0.2, 2),
+                      "usable": True, "has_burned_text": False})
+    cuts = builder.plan_cuts(segs, clips, {sh["i"]: [sh["i"]] for sh in shots})
+    src = builder.montage(cuts, d / "footage", d / "parts", d / "montage.mp4")
+    info = media.probe(src)
+    last = media.last_frame(src, d / "last.jpg")
+    set_ad(job_id, i, step="Building the HyperFrames composition", progress=66)
+    proj = d / "hyperframes"
+    meta = compose.build(proj, src_video=src, last_jpg=last, vo_audio=vo, words=words, probe=info,
+                         plan=plan, lang_code=opts.get("lang_code", "da"))
+    set_ad(job_id, i, step="Rendering with HyperFrames", progress=68, render=meta)
+    raw_out = d / "render_raw.mp4"
+    compose.render(proj, raw_out, on_progress=lambda p: set_ad(job_id, i, progress=68 + int(p * 0.29)))
+    set_ad(job_id, i, step="Compressing", progress=98)
+    out = d / f"ad_{int(time.time())}.mp4"
+    media.compress(raw_out, out)
+    raw_out.unlink(missing_ok=True)
+    set_ad(job_id, i, status="done", step="Done", progress=100, output=str(out.relative_to(root)))
+
+
+def _try(fn, arg) -> str | None:
+    try:
+        fn(arg)
+        return None
+    except Exception as e:  # noqa: BLE001 - collected and reported together
+        traceback.print_exc()
+        return str(e)
+
+
 def _rerender(job_id: str, idx: int) -> None:
     update(job_id, lambda j: j.update(status="running"))
     try:
         a = load(job_id)["ads"][idx]
-        if a.get("mode") == "build":
+        if a.get("mode") == "generate":
+            _generate(job_id, idx, fresh=False)
+        elif a.get("mode") == "build":
             _build(job_id, idx, fresh=False)
         elif a["kind"] == "video":
             _video(job_id, idx, fresh=False)
