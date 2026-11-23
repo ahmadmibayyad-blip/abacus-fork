@@ -43,12 +43,25 @@ def _json_setting(key: str) -> dict:
     return v
 
 
-def _hf_headers() -> dict:
+def hf_credential() -> str:
+    """'<key id>:<secret>'. The console may show the two parts separately or as one string,
+    so the key field also accepts the combined 'id:secret' form."""
     kid, sec = config.get("HIGGSFIELD_KEY_ID").strip(), config.get("HIGGSFIELD_KEY_SECRET").strip()
-    if not kid or not sec:
-        raise GenError("Higgsfield API key ID and secret are not set (Settings tab). "
-                       "Create them at console.higgsfield.ai.")
-    return {"Authorization": f"Key {kid}:{sec}", "Content-Type": "application/json"}
+    if kid.lower().startswith("key "):
+        kid = kid[4:].strip()
+    if ":" in kid:                      # already the complete "id:secret" string
+        return kid
+    if kid and sec:
+        return f"{kid}:{sec}"
+    if kid:
+        raise GenError("Higgsfield needs two parts: the API key (key ID) and its secret. The secret is shown once "
+                       "when the key is created at console.higgsfield.ai. If you did not save it, create a new key "
+                       "and paste both parts on the Settings tab.")
+    raise GenError("The Higgsfield API key is not set (Settings tab). Create one at console.higgsfield.ai.")
+
+
+def _hf_headers() -> dict:
+    return {"Authorization": f"Key {hf_credential()}", "Content-Type": "application/json"}
 
 
 def _req(method: str, url: str, what: str, **kw) -> httpx.Response:
@@ -194,7 +207,11 @@ def video(prompt: str, image_url: str, duration: int, dest: Path, on_wait=None) 
 
 
 def missing_keys() -> list[str]:
-    need = ["HIGGSFIELD_KEY_ID", "HIGGSFIELD_KEY_SECRET"]
-    if config.get("IMAGE_PROVIDER") == "gemini":
-        need.append("GEMINI_API_KEY")
-    return [k for k in need if not config.get(k)]
+    missing = []
+    try:
+        hf_credential()
+    except GenError:
+        missing.append("Higgsfield API key and secret")
+    if config.get("IMAGE_PROVIDER") == "gemini" and not config.get("GEMINI_API_KEY"):
+        missing.append("Gemini API key")
+    return missing

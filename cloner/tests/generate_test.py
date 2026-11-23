@@ -79,6 +79,12 @@ assert g["headers"]["x-goog-api-key"] == "gk" and g["json"]["model"] == "gemini-
 assert g["json"]["input"][1]["type"] == "image" and g["json"]["response_format"]["aspect_ratio"] == "9:16"
 assert Image.open(out).size == (540, 960)
 assert config.get("IMAGE_PROVIDER") == "higgsfield" and gen.missing_keys() == []
+assert gen.hf_credential() == "kid:sec"
+config.save({"HIGGSFIELD_KEY_ID": "Key abc:xyz", "HIGGSFIELD_KEY_SECRET": ""})
+assert gen.hf_credential() == "abc:xyz" and gen.missing_keys() == []          # one combined string
+config.save({"HIGGSFIELD_KEY_ID": "abc"})
+assert gen.missing_keys() == ["Higgsfield API key and secret"]                 # key without its secret
+config.save({"HIGGSFIELD_KEY_ID": "kid", "HIGGSFIELD_KEY_SECRET": "sec"})
 for status, expect in ((402, "balance"), (401, "API key")):
     httpx.request = lambda m, u, **kw: httpx.Response(status, json={}, request=httpx.Request(m, u))
     try:
