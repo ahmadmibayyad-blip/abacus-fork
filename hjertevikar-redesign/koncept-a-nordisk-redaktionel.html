@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HjerteVikar – Koncept A · Nordisk redaktionel</title>
+<meta name="description" content="Redesign-koncept A: rolig, redaktionel og varm.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F4EE;          /* varm papirhvid */
+    --surface:#FFFFFF;
+    --ink:#1B2A26;         /* dyb skovgrøn-sort */
+    --ink-2:#4A5753;
+    --line:#E3DDD2;
+    --brand:#1F4D40;       /* skovgrøn */
+    --brand-ink:#FFFFFF;
+    --heart:#C2493D;       /* dæmpet hjerterød – kun accent */
+    --sand:#EDE6DA;
+    --radius:14px;
+    --max:1200px;
+    --serif:"Fraunces", Georgia, serif;
+    --sans:"Figtree", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+  body{background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+  img{display:block;max-width:100%;height:auto}
+  a{color:inherit}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+  @media (max-width:640px){.wrap{padding:0 16px}}
+  :focus-visible{outline:3px solid var(--heart);outline-offset:3px;border-radius:6px}
+  .skip{position:absolute;left:-9999px;top:8px;background:var(--ink);color:#fff;padding:10px 14px;border-radius:8px;z-index:100}
+  .skip:focus{left:8px}
+
+  /* Topbar */
+  .topbar{background:var(--brand);color:#E8F0EC;font-size:14px}
+  .topbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:40px;flex-wrap:wrap;padding-block:6px}
+  .topbar a{color:#fff;font-weight:600;text-decoration:none}
+  .topbar a:hover{text-decoration:underline}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7FD1A8;margin-right:8px;box-shadow:0 0 0 4px rgba(127,209,168,.2)}
+
+  /* Header */
+  header.site{position:sticky;top:0;z-index:50;background:rgba(247,244,238,.92);backdrop-filter:saturate(1.2) blur(10px);border-bottom:1px solid var(--line)}
+  header.site .wrap{display:flex;align-items:center;justify-content:space-between;height:76px;gap:24px}
+  .logo{display:flex;align-items:center;gap:10px;text-decoration:none;font:600 22px/1 var(--serif);letter-spacing:-.01em}
+  .logo svg{width:30px;height:30px;color:var(--heart)}
+  nav.main ul{display:flex;gap:30px;list-style:none}
+  nav.main a{text-decoration:none;font-weight:500;font-size:15px;color:var(--ink-2);padding:8px 0;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
+  nav.main a:hover{color:var(--ink);border-color:var(--heart)}
+  .actions{display:flex;gap:10px;align-items:center}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 22px;border-radius:999px;font:600 15px/1 var(--sans);text-decoration:none;cursor:pointer;transition:transform .15s ease,background .2s,box-shadow .2s;border:1.5px solid transparent;white-space:nowrap}
+  .btn svg{width:18px;height:18px}
+  .btn-primary{background:var(--brand);color:var(--brand-ink)}
+  .btn-primary:hover{background:#163A30;box-shadow:0 8px 20px -8px rgba(31,77,64,.6)}
+  .btn-ghost{border-color:var(--ink);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:#fff}
+  .btn:active{transform:translateY(1px)}
+  .menu-btn{display:none;width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;align-items:center;justify-content:center}
+  .menu-btn svg{width:22px;height:22px}
+  @media (max-width:980px){nav.main,.actions .btn-ghost{display:none}.menu-btn{display:inline-flex}}
+  @media (max-width:480px){.actions .btn-primary{display:none}}
+
+  /* Hero */
+  .hero{padding:72px 0 56px}
+  .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:64px;align-items:center}
+  .eyebrow{display:inline-flex;align-items:center;gap:10px;font:600 13px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--brand)}
+  .eyebrow::before{content:"";width:28px;height:1.5px;background:var(--heart)}
+  h1{font:500 clamp(40px,5.6vw,72px)/1.04 var(--serif);letter-spacing:-.025em;margin:22px 0 24px;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--brand)}
+  .lead{font-size:19px;color:var(--ink-2);max-width:34ch;margin-bottom:34px}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+  .hero-meta{display:flex;gap:28px;margin-top:44px;padding-top:28px;border-top:1px solid var(--line);flex-wrap:wrap}
+  .hero-meta div{font-size:14px;color:var(--ink-2)}
+  .hero-meta strong{display:block;font:500 30px/1.1 var(--serif);color:var(--ink);margin-bottom:4px}
+  .hero-img{position:relative}
+  .hero-img img{border-radius:220px 220px var(--radius) var(--radius);aspect-ratio:4/5;object-fit:cover;width:100%}
+  .hero-card{position:absolute;left:-36px;bottom:36px;background:var(--surface);border-radius:var(--radius);padding:18px 20px;box-shadow:0 20px 40px -16px rgba(27,42,38,.25);display:flex;gap:14px;align-items:center;max-width:280px}
+  .hero-card .ic{flex:none;width:44px;height:44px;border-radius:50%;background:var(--sand);display:grid;place-items:center;color:var(--brand)}
+  .hero-card .ic svg{width:22px;height:22px}
+  .hero-card p{font-size:14px;line-height:1.4;color:var(--ink-2)}
+  .hero-card b{color:var(--ink);display:block;font-size:15px}
+  @media (max-width:900px){.hero{padding:40px 0}.hero .wrap{grid-template-columns:1fr;gap:40px}.hero-card{left:12px;bottom:12px}}
+
+  /* Sections */
+  section{padding:104px 0}
+  @media (max-width:640px){section{padding:72px 0}}
+  .sec-head{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:end;margin-bottom:56px}
+  h2{font:500 clamp(32px,3.8vw,50px)/1.1 var(--serif);letter-spacing:-.02em;text-wrap:balance}
+  .sec-head p{color:var(--ink-2);max-width:46ch}
+  @media (max-width:800px){.sec-head{grid-template-columns:1fr;gap:16px}}
+
+  /* Values */
+  .values{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink)}
+  .value{padding:32px 28px 8px 0}
+  .value + .value{padding-left:28px;border-left:1px solid var(--line)}
+  .value .num{font:500 14px/1 var(--serif);color:var(--heart);margin-bottom:28px;display:block}
+  .value h3{font:600 20px/1.3 var(--sans);margin-bottom:10px}
+  .value p{color:var(--ink-2);font-size:16px}
+  @media (max-width:900px){.values{grid-template-columns:1fr 1fr}.value:nth-child(3){padding-left:0;border-left:0}.value{border-top:1px solid var(--line)}}
+  @media (max-width:520px){.values{grid-template-columns:1fr}.value,.value + .value{padding-left:0;border-left:0}}
+
+  /* Process */
+  .process{background:var(--brand);color:#E8F0EC}
+  .process h2{color:#fff}
+  .process .sec-head p{color:#B9CEC5}
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;counter-reset:s;list-style:none}
+  .step{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);padding:30px 26px;position:relative}
+  .step::before{counter-increment:s;content:"0" counter(s);font:500 44px/1 var(--serif);color:#fff;opacity:.9;display:block;margin-bottom:28px}
+  .step h3{color:#fff;font-size:19px;margin-bottom:10px}
+  .step p{font-size:15.5px;color:#C7D8D0}
+  .step a{color:#fff;font-weight:600}
+  @media (max-width:980px){.steps{grid-template-columns:1fr 1fr}}
+  @media (max-width:560px){.steps{grid-template-columns:1fr}}
+
+  /* Coverage */
+  .coverage .wrap{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+  .munis{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:32px 0;border-top:1px solid var(--line)}
+  .munis li{list-style:none;padding:16px 0;border-bottom:1px solid var(--line);font-weight:500;display:flex;align-items:center;gap:10px}
+  .munis li svg{width:16px;height:16px;color:var(--heart)}
+  .office{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--ink-2)}
+  .office svg{width:20px;height:20px;flex:none;color:var(--brand);margin-top:3px}
+  .coverage img{border-radius:var(--radius);aspect-ratio:8/9;object-fit:cover;width:100%}
+  @media (max-width:900px){.coverage .wrap{grid-template-columns:1fr}}
+
+  /* Quote band */
+  .belief{background:var(--sand);text-align:center}
+  .belief blockquote{font:400 clamp(28px,3.6vw,46px)/1.2 var(--serif);letter-spacing:-.015em;max-width:22ch;margin:0 auto 28px;text-wrap:balance}
+  .belief blockquote em{color:var(--heart)}
+  .belief p{max-width:62ch;margin:0 auto 28px;color:var(--ink-2)}
+  .link-arrow{display:inline-flex;align-items:center;gap:8px;font-weight:600;color:var(--brand);text-decoration:none;border-bottom:1.5px solid currentColor;padding-bottom:3px}
+  .link-arrow svg{width:18px;height:18px;transition:transform .2s}
+  .link-arrow:hover svg{transform:translateX(4px)}
+
+  /* Target groups */
+  .groups{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+  .group a{text-decoration:none;display:block}
+  .group .img{overflow:hidden;border-radius:var(--radius);margin-bottom:22px}
+  .group img{aspect-ratio:4/3;object-fit:cover;width:100%;transition:transform .5s ease}
+  .group a:hover img{transform:scale(1.04)}
+  .group h3{font:500 26px/1.2 var(--serif);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+  .group h3 svg{width:22px;height:22px;color:var(--heart);transition:transform .2s}
+  .group a:hover h3 svg{transform:translate(3px,-3px)}
+  .group p{color:var(--ink-2);font-size:16px}
+  @media (max-width:900px){.groups{grid-template-columns:1fr}}
+
+  /* Services */
+  .services{background:var(--surface)}
+  .svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+  .svc-col h3{font:600 13px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--brand);padding-bottom:16px;border-bottom:1px solid var(--ink);margin-bottom:4px}
+  .svc-col ul{list-style:none}
+  .svc-col a{display:grid;grid-template-columns:1fr auto;gap:4px 16px;align-items:center;padding:22px 0;border-bottom:1px solid var(--line);text-decoration:none;transition:padding .2s}
+  .svc-col a:hover{padding-left:10px}
+  .svc-col .t{font:500 21px/1.3 var(--serif)}
+  .svc-col .law{grid-column:1;font-size:13.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .svc-col svg{grid-row:1/3;grid-column:2;width:20px;height:20px;color:var(--ink-2)}
+  @media (max-width:800px){.svc-grid{grid-template-columns:1fr;gap:40px}}
+
+  /* Split CTA */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .split .card{border-radius:20px;padding:48px 44px;display:flex;flex-direction:column;gap:18px;min-height:380px}
+  .split .card h3{font:500 36px/1.1 var(--serif);letter-spacing:-.02em}
+  .split .card p{flex:1}
+  .card-a{background:var(--ink);color:#D7DFDC}
+  .card-a h3{color:#fff}
+  .card-a .btn{background:#fff;color:var(--ink);align-self:flex-start}
+  .card-b{background:var(--surface);border:1px solid var(--line);color:var(--ink-2)}
+  .card-b h3{color:var(--ink)}
+  .card-b .btn{align-self:flex-start}
+  .tags{display:flex;flex-wrap:wrap;gap:8px}
+  .tags span{font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--sand);color:var(--ink)}
+  @media (max-width:860px){.split{grid-template-columns:1fr}.split .card{padding:36px 28px;min-height:0}}
+
+  /* About */
+  .about .wrap{display:grid;grid-template-columns:.85fr 1.15fr;gap:72px;align-items:center}
+  .about img{border-radius:var(--radius) var(--radius) 200px var(--radius);aspect-ratio:8/9;object-fit:cover;width:100%}
+  .about p{color:var(--ink-2);margin:20px 0}
+  .pull{border-left:3px solid var(--heart);padding:6px 0 6px 24px;margin:32px 0;font:400 italic 24px/1.4 var(--serif);color:var(--ink)}
+  @media (max-width:900px){.about .wrap{grid-template-columns:1fr;gap:40px}}
+
+  /* Final CTA */
+  .final{padding:0 0 104px}
+  .final .box{background:var(--brand);border-radius:24px;padding:72px 56px;display:grid;grid-template-columns:1.3fr 1fr;gap:48px;align-items:center;color:#C7D8D0}
+  .final h2{color:#fff;margin-bottom:16px}
+  .contact-list{display:flex;flex-direction:column;gap:12px}
+  .contact-list a{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);text-decoration:none;color:#fff;font-weight:600;font-size:18px;transition:background .2s}
+  .contact-list a:hover{background:rgba(255,255,255,.16)}
+  .contact-list svg{width:22px;height:22px;flex:none}
+  .contact-list small{display:block;font-weight:400;font-size:13px;color:#B9CEC5}
+  @media (max-width:860px){.final .box{grid-template-columns:1fr;padding:44px 24px}}
+
+  footer{border-top:1px solid var(--line);padding:56px 0 40px;font-size:15px;color:var(--ink-2)}
+  footer .grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px}
+  footer h4{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);margin-bottom:16px}
+  footer ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+  footer a{text-decoration:none}
+  footer a:hover{color:var(--ink);text-decoration:underline}
+  .legal{margin-top:48px;padding-top:24px;border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:13.5px}
+  @media (max-width:800px){footer .grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Spring til indhold</a>
+
+<div class="topbar" role="region" aria-label="Akut kontakt">
+  <div class="wrap">
+    <span><span class="dot" aria-hidden="true"></span>Akut behov for en vikar? Vi stiller med en kvalificeret vikar hurtigst muligt.</span>
+    <a href="tel:+4522228790">Ring 22 22 87 90</a>
+  </div>
+</div>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="#" aria-label="HjerteVikar forside">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.7 4.5c2.1 0 3.6 1.1 5.3 3 1.7-1.9 3.2-3 5.3-3 3.7 0 5.8 3.8 4.3 7.2C19.5 16.4 12 21 12 21z"/></svg>
+      HjerteVikar
+    </a>
+    <nav class="main" aria-label="Hovedmenu">
+      <ul>
+        <li><a href="#ydelser">Ydelser</a></li>
+        <li><a href="#malgrupper">Målgrupper</a></li>
+        <li><a href="#omraade">Dækningsområde</a></li>
+        <li><a href="#om">Om os</a></li>
+        <li><a href="#kontakt">Kontakt</a></li>
+      </ul>
+    </nav>
+    <div class="actions">
+      <a class="btn btn-ghost" href="#bliv-vikar">Bliv vikar</a>
+      <a class="btn btn-primary" href="#kontakt">Bestil en vikar</a>
+      <button class="menu-btn" aria-label="Åbn menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <!-- HERO -->
+  <section class="hero" aria-labelledby="h1">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow">Socialpædagogisk vikarbureau · Østjylland</span>
+        <h1 id="h1">Erfarne hænder, når <em>hverdagen er svær.</em></h1>
+        <p class="lead">Fagligt stærke vikarer til bosteder, dagtilbud og specialskoler i 8 østjyske kommuner.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#kontakt">Bestil en vikar
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn btn-ghost" href="#bliv-vikar">Bliv vikar hos os</a>
+        </div>
+        <div class="hero-meta">
+          <div><strong>8</strong>kommuner dækket</div>
+          <div><strong>8</strong>lovbundne ydelser</div>
+          <div><strong>100%</strong>socialfagligt erfarne</div>
+        </div>
+      </div>
+      <div class="hero-img">
+        <img src="https://images.unsplash.com/photo-1758273240331-745ccab011a2?auto=format&fit=crop&q=75&w=900&h=1125" alt="Socialpædagogisk vikar i samtale med en ung pige" width="900" height="1125">
+        <div class="hero-card">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <p><b>Samme vikar næste gang</b>Kendte ansigter giver tryghed for borgerne.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VALUES -->
+  <section aria-labelledby="h-values" style="padding-top:40px">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-values">Det får I hos HjerteVikar</h2>
+        <p>Vi matcher mennesker, ikke bare CV’er. Faglighed og kemi vægter lige tungt, når vi sender en vikar ud.</p>
+      </div>
+      <div class="values">
+        <div class="value"><span class="num">01</span><h3>Erfarne fagpersoner</h3><p>Alle vikarer er socialfagligt uddannede eller har solid praksiserfaring.</p></div>
+        <div class="value"><span class="num">02</span><h3>Nærvær frem for alt</h3><p>Vi matcher mennesker, ikke bare CV’er, så kemien passer til borgerne.</p></div>
+        <div class="value"><span class="num">03</span><h3>Hurtig udrykning</h3><p>Vi stiller med en kvalificeret vikar hurtigst muligt.</p></div>
+        <div class="value"><span class="num">04</span><h3>Bredt dækningsområde</h3><p>8 kommuner i Østjylland, tæt på jer, uanset hvor I ligger.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section class="process" aria-labelledby="h-proc">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-proc">Sådan bestiller I en vikar</h2>
+        <p>Fire enkle trin – fra første opkald til en vikar, borgerne kender.</p>
+      </div>
+      <ol class="steps">
+        <li class="step"><h3>Ring eller send formularen</h3><p>Fortæl om opgaven, målgruppen og hvornår I mangler en vikar. Akut? Ring på <a href="tel:+4522228790">22 22 87 90</a>.</p></li>
+        <li class="step"><h3>Vi finder den rette vikar</h3><p>Vi matcher ud fra faglighed, erfaring og jeres borgere – og bekræfter, hvem der kommer.</p></li>
+        <li class="step"><h3>Vikaren bliver briefet</h3><p>Før vagten sætter vi vikaren grundigt ind i borgerne og jeres rutiner.</p></li>
+        <li class="step"><h3>Samme vikar næste gang</h3><p>Vi tilstræber, at de samme vikarer kommer igen, så borgerne møder kendte ansigter.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- COVERAGE -->
+  <section class="coverage" id="omraade" aria-labelledby="h-cov">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow">Dækningsområde</span>
+        <h2 id="h-cov" style="margin-top:18px">Vi dækker 8 kommuner i Østjylland</h2>
+        <ul class="munis">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Aarhus</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Skanderborg</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Silkeborg</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Favrskov</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Syddjurs</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Norddjurs</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Randers</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Odder</li>
+        </ul>
+        <p class="office"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>Fra kontoret på Holme Ringvej 146, 8260 Aarhus, sender vi fast tilknyttede vikarer ud i hele området.</p>
+      </div>
+      <img src="https://images.unsplash.com/photo-1738035249325-602e5f2bff4f?auto=format&fit=crop&q=75&w=800&h=900" alt="Vikar og borger sidder roligt sammen i et lyst, trygt rum" width="800" height="900" loading="lazy">
+    </div>
+  </section>
+
+  <!-- BELIEF -->
+  <section class="belief" aria-labelledby="h-belief">
+    <div class="wrap">
+      <span class="eyebrow" id="h-belief" style="justify-content:center;margin-bottom:28px">Vores vision</span>
+      <blockquote>Den rette vikar kan gøre <em>en hel dags forskel</em> for et menneske.</blockquote>
+      <p>Socialpædagogik handler om relationer. Målet er altid tryghed, kontinuitet og faglig kvalitet for de borgere, der er allermest sårbare over for forandring.</p>
+      <a class="link-arrow" href="#">Læs mere om vores vision <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+  </section>
+
+  <!-- GROUPS -->
+  <section id="malgrupper" aria-labelledby="h-groups">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-groups">Fra børn til voksne – med den faglighed, hver borger har brug for</h2>
+        <p>Autisme, ADHD, udviklingshandicap og funktionsnedsættelser – såvel som misbrug, angst, PTSD og sindslidelser.</p>
+      </div>
+      <div class="groups">
+        <article class="group"><a href="#">
+          <div class="img"><img src="https://images.unsplash.com/photo-1714646793034-7d833114c60d?auto=format&fit=crop&q=75&w=800&h=600" alt="Ung vikar og barn leger med klodser i et lyst lokale" width="800" height="600" loading="lazy"></div>
+          <h3>Børn og unge <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></h3>
+          <p>Autisme, ADHD og udviklingsforstyrrelser på døgninstitutioner, opholdssteder og specialskoler.</p></a></article>
+        <article class="group"><a href="#">
+          <div class="img"><img src="https://images.unsplash.com/photo-1765896387398-1e1ae8d2eb85?auto=format&fit=crop&q=75&w=800&h=600" alt="Vikar smiler og læner sig venligt mod en voksen borger i en stol" width="800" height="600" loading="lazy"></div>
+          <h3>Voksne med handicap <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></h3>
+          <p>Autisme, udviklingshandicap eller funktionsnedsættelse i botilbud, dagtilbud og aktivitetstilbud.</p></a></article>
+        <article class="group"><a href="#">
+          <div class="img"><img src="https://images.unsplash.com/photo-1507537362848-9c7e70b7b5c1?auto=format&fit=crop&q=75&w=800&h=600" alt="To mænd taler sammen i øjenhøjde i en rolig samtale" width="800" height="600" loading="lazy"></div>
+          <h3>Psykiatri og misbrug <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></h3>
+          <p>Misbrug, angst, PTSD og sindslidelser i socialpsykiatrien, på krisecentre og i rehabilitering.</p></a></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="services" id="ydelser" aria-labelledby="h-svc">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-svc">Ydelser efter Barnets Lov og Serviceloven</h2>
+        <p>Ud over vikarer leverer vi de socialpædagogiske ydelser, kommunen bevilger til børn, familier og voksne.</p>
+      </div>
+      <div class="svc-grid">
+        <div class="svc-col">
+          <h3>Børn og familier</h3>
+          <ul>
+            <li><a href="#"><span class="t">Fast kontaktperson</span><span class="law">Barnets lov § 32, stk. 1, nr. 3</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+            <li><a href="#"><span class="t">Støtteperson til forældre</span><span class="law">Barnets lov § 75</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+            <li><a href="#"><span class="t">Støttet og overvåget samvær</span><span class="law">Barnets lov § 104, stk. 3 og § 105, stk. 1, nr. 1</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+            <li><a href="#"><span class="t">Familiebehandling og støtte i hjemmet</span><span class="law">Barnets lov § 32, stk. 1, nr. 2 og nr. 5</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+          </ul>
+        </div>
+        <div class="svc-col">
+          <h3>Voksne</h3>
+          <ul>
+            <li><a href="#"><span class="t">Socialpædagogisk støtte</span><span class="law">Serviceloven § 85</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+            <li><a href="#"><span class="t">Støtte- og kontaktperson</span><span class="law">Serviceloven § 99</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+            <li><a href="#"><span class="t">Ledsagelse</span><span class="law">Serviceloven § 97</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+            <li><a href="#"><span class="t">Afløsning og aflastning</span><span class="law">Serviceloven § 84</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPLIT CTA -->
+  <section id="bliv-vikar" aria-labelledby="h-split">
+    <div class="wrap">
+      <div class="sec-head"><h2 id="h-split">Uanset om I mangler en hånd – eller selv vil være den hånd</h2></div>
+      <div class="split">
+        <div class="card card-a">
+          <h3>Bestil en vikar</h3>
+          <p>Mangler jeres bosted, dagtilbud eller specialskole en erfaren hånd ved sygdom, ferie eller travlhed? Fortæl os om opgaven, og vi finder en vikar, der passer til jeres borgere og jeres faglige tilgang.</p>
+          <a class="btn" href="#kontakt">Bestil en vikar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        </div>
+        <div class="card card-b">
+          <h3>Bliv vikar hos os</h3>
+          <div class="tags"><span>Pædagog</span><span>SSA</span><span>Socialrådgiver</span><span>Lærer</span><span>Socialfaglig erfaring</span></div>
+          <p>Fleksible vagter i hele vores dækningsområde, gode vilkår og et fællesskab, der matcher dit engagement.</p>
+          <a class="btn btn-primary" href="#">Søg som vikar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about" id="om" aria-labelledby="h-about" style="padding-top:24px">
+    <div class="wrap">
+      <img src="https://images.unsplash.com/photo-1631203928521-bde1e727e8b7?auto=format&fit=crop&q=75&w=800&h=900" alt="Afslappet socialpædagog med varmt smil" width="800" height="900" loading="lazy">
+      <div>
+        <span class="eyebrow">Om HjerteVikar</span>
+        <h2 id="h-about" style="margin-top:18px">Et lokalt bureau, der kender Østjylland og hjertet i faget</h2>
+        <p>HjerteVikar er grundlagt af socialpædagoger, der selv har stået i vagterne. Vi ved, hvor meget det betyder for en institution at kunne stole på den vikar, der træder ind ad døren – og hvor vigtigt det er for en vikar at blive mødt med respekt og tydelige rammer.</p>
+        <p class="pull">“Vi sender ikke bare et CV ud ad døren. Vi sender et menneske, der er klar til at tage ansvar fra første vagt.”</p>
+        <a class="link-arrow" href="#">Mød os bag HjerteVikar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <div class="final" id="kontakt">
+    <div class="wrap">
+      <div class="box">
+        <div>
+          <h2>Klar til at tage næste skridt sammen med os?</h2>
+          <p>Ring eller skriv, uanset om I mangler en vikar i morgen, eller du overvejer dit næste vikarjob. Vi svarer hurtigt – og vi lytter altid først.</p>
+        </div>
+        <div class="contact-list">
+          <a href="tel:+4522228790"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span>22 22 87 90<small>Akut vikarbehov</small></span></a>
+          <a href="mailto:kontakt@hjertevikar.dk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><span>kontakt@hjertevikar.dk<small>Vi svarer samme dag</small></span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <a class="logo" href="#"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:26px;height:26px;color:var(--heart)"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.7 4.5c2.1 0 3.6 1.1 5.3 3 1.7-1.9 3.2-3 5.3-3 3.7 0 5.8 3.8 4.3 7.2C19.5 16.4 12 21 12 21z"/></svg>HjerteVikar</a>
+        <p style="margin-top:16px;max-width:30ch">Socialpædagogiske vikarer og ydelser i Østjylland.</p>
+      </div>
+      <div><h4>Ydelser</h4><ul><li><a href="#">Vikarer</a></li><li><a href="#">Børn og familier</a></li><li><a href="#">Voksne</a></li></ul></div>
+      <div><h4>Om os</h4><ul><li><a href="#">Vision</a></li><li><a href="#">Målgrupper</a></li><li><a href="#">Bliv vikar</a></li></ul></div>
+      <div><h4>Kontakt</h4><ul><li>Holme Ringvej 146<br>8260 Aarhus</li><li><a href="tel:+4522228790">22 22 87 90</a></li><li><a href="mailto:kontakt@hjertevikar.dk">kontakt@hjertevikar.dk</a></li></ul></div>
+    </div>
+    <div class="legal"><span>© 2026 HjerteVikar · CVR [indsæt]</span><span><a href="#">Privatlivspolitik</a> · <a href="#">Cookies</a></span></div>
+  </div>
+</footer>
+</body>
+</html>
