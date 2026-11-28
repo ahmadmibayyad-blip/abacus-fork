@@ -111,30 +111,30 @@
   <div class="wrap narrow">
     <div class="head center"><span class="kicker">Ansøgning</span><h2 class="title" id="h-app">Søg som vikar</h2>
       <p class="intro">Det tager 3 minutter. Vi vender tilbage hurtigst muligt.</p></div>
-    <form class="panel js-form" aria-labelledby="h-app" novalidate>
+    <form class="panel js-form" aria-labelledby="h-app" data-subject="Ny vikaransøgning – HjerteVikar" method="post" enctype="multipart/form-data" novalidate>
       <div class="fgrid">
-        <div class="field"><label for="a-name">Fulde navn</label><input id="a-name" name="name" type="text" required autocomplete="name"><span class="err">Skriv dit navn</span></div>
-        <div class="field"><label for="a-tel">Telefon</label><input id="a-tel" name="tel" type="tel" required inputmode="tel" autocomplete="tel" pattern="[0-9 +]{8,}"><span class="err">Mindst 8 cifre</span></div>
-        <div class="field"><label for="a-mail">E-mail</label><input id="a-mail" name="mail" type="email" required autocomplete="email"><span class="err">Skriv en gyldig e-mail</span></div>
-        <div class="field"><label for="a-post">Postnummer</label><input id="a-post" name="post" type="text" required inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{4}"><span class="err">4 cifre</span></div>
-        <div class="field"><label for="a-udd">Uddannelse</label><select id="a-udd" name="udd"><option>Pædagog</option><option>Pædagogisk assistent</option><option>Social- og sundhedsassistent</option><option>Socialrådgiver</option><option>Lærer</option><option>Anden socialfaglig erfaring</option></select></div>
-        <div class="field"><label for="a-erf">Erfaring i feltet</label><select id="a-erf" name="erf"><option>Under 1 år</option><option>1–3 år</option><option>3–5 år</option><option>Over 5 år</option></select></div>
+        <div class="field"><label for="a-name">Fulde navn</label><input id="a-name" name="Fulde navn" type="text" required autocomplete="name"><span class="err">Skriv dit navn</span></div>
+        <div class="field"><label for="a-tel">Telefon</label><input id="a-tel" name="Telefon" type="tel" required inputmode="tel" autocomplete="tel" pattern="[0-9 +]{8,}"><span class="err">Mindst 8 cifre</span></div>
+        <div class="field"><label for="a-mail">E-mail</label><input id="a-mail" name="email" type="email" required autocomplete="email"><span class="err">Skriv en gyldig e-mail</span></div>
+        <div class="field"><label for="a-post">Postnummer</label><input id="a-post" name="Postnummer" type="text" required inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{4}"><span class="err">4 cifre</span></div>
+        <div class="field"><label for="a-udd">Uddannelse</label><select id="a-udd" name="Uddannelse"><option>Pædagog</option><option>Pædagogisk assistent</option><option>Social- og sundhedsassistent</option><option>Socialrådgiver</option><option>Lærer</option><option>Anden socialfaglig erfaring</option></select></div>
+        <div class="field"><label for="a-erf">Erfaring i feltet</label><select id="a-erf" name="Erfaring i feltet"><option>Under 1 år</option><option>1–3 år</option><option>3–5 år</option><option>Over 5 år</option></select></div>
         <fieldset class="full chips-field"><legend>Hvilke målgrupper har du erfaring med?</legend>
-          <label><input type="checkbox" name="mg" value="born"> Børn og unge</label>
-          <label><input type="checkbox" name="mg" value="handicap"> Voksne med handicap</label>
-          <label><input type="checkbox" name="mg" value="psyk"> Psykiatri og misbrug</label>
+          <label><input type="checkbox" name="Målgruppe-erfaring" value="born"> Børn og unge</label>
+          <label><input type="checkbox" name="Målgruppe-erfaring" value="handicap"> Voksne med handicap</label>
+          <label><input type="checkbox" name="Målgruppe-erfaring" value="psyk"> Psykiatri og misbrug</label>
         </fieldset>
         <fieldset class="full chips-field"><legend>Hvor vil du gerne arbejde?</legend>
-          <label><input type="checkbox" name="kom" value="Aarhus"> Aarhus</label><label><input type="checkbox" name="kom" value="Skanderborg"> Skanderborg</label><label><input type="checkbox" name="kom" value="Silkeborg"> Silkeborg</label><label><input type="checkbox" name="kom" value="Favrskov"> Favrskov</label><label><input type="checkbox" name="kom" value="Syddjurs"> Syddjurs</label><label><input type="checkbox" name="kom" value="Norddjurs"> Norddjurs</label><label><input type="checkbox" name="kom" value="Randers"> Randers</label><label><input type="checkbox" name="kom" value="Odder"> Odder</label>
+          <label><input type="checkbox" name="Ønskede kommuner" value="Aarhus"> Aarhus</label><label><input type="checkbox" name="Ønskede kommuner" value="Skanderborg"> Skanderborg</label><label><input type="checkbox" name="Ønskede kommuner" value="Silkeborg"> Silkeborg</label><label><input type="checkbox" name="Ønskede kommuner" value="Favrskov"> Favrskov</label><label><input type="checkbox" name="Ønskede kommuner" value="Syddjurs"> Syddjurs</label><label><input type="checkbox" name="Ønskede kommuner" value="Norddjurs"> Norddjurs</label><label><input type="checkbox" name="Ønskede kommuner" value="Randers"> Randers</label><label><input type="checkbox" name="Ønskede kommuner" value="Odder"> Odder</label>
         </fieldset>
         <div class="field full"><label for="a-cv">CV</label>
           <label class="upload" for="a-cv"><svg class="ico" aria-hidden="true"><use href="#i-upload"/></svg><span><b>Vælg fil</b> eller træk den hertil<br><small>PDF eller Word, maks. 10 MB</small></span></label>
-          <input id="a-cv" name="cv" type="file" accept=".pdf,.doc,.docx" class="sr-only"><span class="file-name" aria-live="polite"></span></div>
-        <div class="field full"><label for="a-msg">Fortæl kort om dig selv <span class="opt">(valgfri)</span></label><textarea id="a-msg" name="msg" rows="5" placeholder="Hvad brænder du for, og hvornår kan du arbejde?"></textarea></div>
-        <div class="check full"><input type="checkbox" id="a-gdpr" required><label for="a-gdpr">Jeg accepterer, at HjerteVikar behandler mine oplysninger i henhold til <a href="#">privatlivspolitikken</a>.</label></div>
+          <input id="a-cv" name="CV" type="file" accept=".pdf,.doc,.docx" class="sr-only"><span class="file-name" aria-live="polite"></span></div>
+        <div class="field full"><label for="a-msg">Fortæl kort om dig selv <span class="opt">(valgfri)</span></label><textarea id="a-msg" name="Fortæl kort om dig selv" rows="5" placeholder="Hvad brænder du for, og hvornår kan du arbejde?"></textarea></div>
+        <div class="check full"><input type="checkbox" id="a-gdpr" name="Samtykke" value="ja" required><label for="a-gdpr">Jeg accepterer, at HjerteVikar behandler mine oplysninger i henhold til <a href="#">privatlivspolitikken</a>.</label></div>
       </div>
       <button class="btn btn-coral btn-lg" type="submit">Send ansøgning <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></button>
-      <p class="form-success" role="status" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg><span>Tak for din ansøgning! Vi kontakter dig hurtigst muligt for en uforpligtende snak.</span></p>
+      <p class="form-success" role="status" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg><span>Tak for din ansøgning! Vi kontakter dig hurtigst muligt for en uforpligtende snak.</span></p><p class="form-error" role="alert" hidden>Beskeden kunne ikke sendes. Prøv igen, eller ring på <a href="tel:+4522228790">22 22 87 90</a>.</p>
     </form>
   </div>
 </section>

@@ -399,3 +399,8 @@
   .map-meta span{color:var(--ink-2);font-size:15px}
   .muni-list{display:flex;flex-wrap:wrap;gap:8px}
   .muni-list span{font-size:14px;font-weight:600;padding:6px 12px;border-radius:8px;background:var(--navy-100);color:var(--navy-900)}
+  .form-error{display:flex;gap:8px;margin-top:14px;padding:14px 16px;border-radius:10px;background:#FDECEC;color:var(--coral-700);font-weight:600;font-size:15px}
+  .form-error[hidden]{display:none}
+  .form-error a{color:inherit}
+  .hp{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+  button[aria-busy="true"]{opacity:.7;cursor:progress}

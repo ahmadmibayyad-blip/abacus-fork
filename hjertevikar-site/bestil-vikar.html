@@ -68,33 +68,33 @@
 </section>
 <section class="pad-sm">
   <div class="wrap form-layout">
-    <form class="panel js-form" aria-labelledby="h-bf" novalidate>
+    <form class="panel js-form" aria-labelledby="h-bf" data-subject="Ny vikarbestilling – HjerteVikar" novalidate>
       <h2 id="h-bf" class="panel-title">Om opgaven</h2>
       <div class="fgrid">
-        <div class="field"><label for="f-inst">Institution / tilbud</label><input id="f-inst" name="inst" type="text" required autocomplete="organization"><span class="err">Skriv navnet på institutionen</span></div>
-        <div class="field"><label for="f-kom">Kommune</label><select id="f-kom" name="kom"><option>Aarhus</option><option>Skanderborg</option><option>Silkeborg</option><option>Favrskov</option><option>Syddjurs</option><option>Norddjurs</option><option>Randers</option><option>Odder</option><option>Anden kommune</option></select></div>
-        <div class="field"><label for="f-type">Type af tilbud</label><select id="f-type" name="type"><option>Bosted / botilbud</option><option>Døgninstitution / opholdssted</option><option>Dagtilbud / aktivitetstilbud</option><option>Specialskole</option><option>Socialpsykiatri</option><option>Krisecenter</option><option>Andet</option></select></div>
-        <div class="field"><label for="f-mg">Målgruppe</label><select id="f-mg" name="mg"><option>Børn og unge</option><option>Voksne med handicap</option><option>Psykiatri og misbrug</option><option>Flere målgrupper</option></select></div>
-        <div class="field"><label for="f-start">Startdato</label><input id="f-start" name="start" type="date" required><span class="err">Vælg en dato</span></div>
-        <div class="field"><label for="f-omf">Omfang</label><select id="f-omf" name="omf"><option>Enkeltvagt</option><option>Flere vagter</option><option>Længerevarende forløb</option><option>Ved ikke endnu</option></select></div>
+        <div class="field"><label for="f-inst">Institution / tilbud</label><input id="f-inst" name="Institution / tilbud" type="text" required autocomplete="organization"><span class="err">Skriv navnet på institutionen</span></div>
+        <div class="field"><label for="f-kom">Kommune</label><select id="f-kom" name="Kommune"><option>Aarhus</option><option>Skanderborg</option><option>Silkeborg</option><option>Favrskov</option><option>Syddjurs</option><option>Norddjurs</option><option>Randers</option><option>Odder</option><option>Anden kommune</option></select></div>
+        <div class="field"><label for="f-type">Type af tilbud</label><select id="f-type" name="Type af tilbud"><option>Bosted / botilbud</option><option>Døgninstitution / opholdssted</option><option>Dagtilbud / aktivitetstilbud</option><option>Specialskole</option><option>Socialpsykiatri</option><option>Krisecenter</option><option>Andet</option></select></div>
+        <div class="field"><label for="f-mg">Målgruppe</label><select id="f-mg" name="Målgruppe"><option>Børn og unge</option><option>Voksne med handicap</option><option>Psykiatri og misbrug</option><option>Flere målgrupper</option></select></div>
+        <div class="field"><label for="f-start">Startdato</label><input id="f-start" name="Startdato" type="date" required><span class="err">Vælg en dato</span></div>
+        <div class="field"><label for="f-omf">Omfang</label><select id="f-omf" name="Omfang"><option>Enkeltvagt</option><option>Flere vagter</option><option>Længerevarende forløb</option><option>Ved ikke endnu</option></select></div>
         <fieldset class="full chips-field"><legend>Vagttyper</legend>
-          <label><input type="checkbox" name="vagt" value="dag"> Dag</label>
-          <label><input type="checkbox" name="vagt" value="aften"> Aften</label>
-          <label><input type="checkbox" name="vagt" value="nat"> Nat / sovende nattevagt</label>
-          <label><input type="checkbox" name="vagt" value="weekend"> Weekend</label>
+          <label><input type="checkbox" name="Vagttyper" value="dag"> Dag</label>
+          <label><input type="checkbox" name="Vagttyper" value="aften"> Aften</label>
+          <label><input type="checkbox" name="Vagttyper" value="nat"> Nat / sovende nattevagt</label>
+          <label><input type="checkbox" name="Vagttyper" value="weekend"> Weekend</label>
         </fieldset>
-        <div class="field full"><label for="f-besk">Beskriv opgaven <span class="opt">(valgfri)</span></label><textarea id="f-besk" name="besk" rows="5" placeholder="Fx borgernes behov, faglig tilgang, særlige hensyn, kørekort …"></textarea></div>
+        <div class="field full"><label for="f-besk">Beskriv opgaven <span class="opt">(valgfri)</span></label><textarea id="f-besk" name="Beskriv opgaven" rows="5" placeholder="Fx borgernes behov, faglig tilgang, særlige hensyn, kørekort …"></textarea></div>
       </div>
       <h2 class="panel-title" style="margin-top:32px">Kontaktoplysninger</h2>
       <div class="fgrid">
-        <div class="field"><label for="f-name">Kontaktperson</label><input id="f-name" name="name" type="text" required autocomplete="name"><span class="err">Skriv dit navn</span></div>
-        <div class="field"><label for="f-role">Stilling <span class="opt">(valgfri)</span></label><input id="f-role" name="role" type="text"></div>
-        <div class="field"><label for="f-tel">Telefon</label><input id="f-tel" name="tel" type="tel" required inputmode="tel" autocomplete="tel" pattern="[0-9 +]{8,}"><span class="err">Mindst 8 cifre</span></div>
-        <div class="field"><label for="f-mail">E-mail</label><input id="f-mail" name="mail" type="email" required autocomplete="email"><span class="err">Skriv en gyldig e-mail</span></div>
-        <div class="check full"><input type="checkbox" id="f-gdpr" required><label for="f-gdpr">Jeg accepterer, at HjerteVikar behandler mine oplysninger i henhold til <a href="#">privatlivspolitikken</a>.</label></div>
+        <div class="field"><label for="f-name">Kontaktperson</label><input id="f-name" name="Kontaktperson" type="text" required autocomplete="name"><span class="err">Skriv dit navn</span></div>
+        <div class="field"><label for="f-role">Stilling <span class="opt">(valgfri)</span></label><input id="f-role" name="Stilling" type="text"></div>
+        <div class="field"><label for="f-tel">Telefon</label><input id="f-tel" name="Telefon" type="tel" required inputmode="tel" autocomplete="tel" pattern="[0-9 +]{8,}"><span class="err">Mindst 8 cifre</span></div>
+        <div class="field"><label for="f-mail">E-mail</label><input id="f-mail" name="email" type="email" required autocomplete="email"><span class="err">Skriv en gyldig e-mail</span></div>
+        <div class="check full"><input type="checkbox" id="f-gdpr" name="Samtykke" value="ja" required><label for="f-gdpr">Jeg accepterer, at HjerteVikar behandler mine oplysninger i henhold til <a href="#">privatlivspolitikken</a>.</label></div>
       </div>
       <button class="btn btn-coral btn-lg" type="submit">Send bestilling <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></button>
-      <p class="form-success" role="status" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg><span>Tak! Vi har modtaget jeres bestilling og kontakter jer hurtigst muligt for at bekræfte, hvem der kommer.</span></p>
+      <p class="form-success" role="status" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg><span>Tak! Vi har modtaget jeres bestilling og kontakter jer hurtigst muligt for at bekræfte, hvem der kommer.</span></p><p class="form-error" role="alert" hidden>Beskeden kunne ikke sendes. Prøv igen, eller ring på <a href="tel:+4522228790">22 22 87 90</a>.</p>
     </form>
     <aside class="side">
       <div class="side-card dark">

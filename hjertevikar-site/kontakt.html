@@ -77,24 +77,24 @@
 </section>
 <section class="pad-sm" style="padding-top:0">
   <div class="wrap form-layout">
-    <form class="panel js-form" aria-labelledby="h-kf" novalidate>
+    <form class="panel js-form" aria-labelledby="h-kf" data-subject="Ny besked fra kontaktformularen – HjerteVikar" novalidate>
       <h2 id="h-kf" class="panel-title">Skriv til os</h2>
       <div class="fgrid">
         <fieldset class="full chips-field radio"><legend>Jeg henvender mig som</legend>
-          <label><input type="radio" name="hvem" value="inst" checked> Institution / kommune</label>
-          <label><input type="radio" name="hvem" value="vikar"> Kommende vikar</label>
-          <label><input type="radio" name="hvem" value="andet"> Andet</label>
+          <label><input type="radio" name="Henvender sig som" value="inst" checked> Institution / kommune</label>
+          <label><input type="radio" name="Henvender sig som" value="vikar"> Kommende vikar</label>
+          <label><input type="radio" name="Henvender sig som" value="andet"> Andet</label>
         </fieldset>
-        <div class="field"><label for="k-name">Navn</label><input id="k-name" name="name" type="text" required autocomplete="name"><span class="err">Skriv dit navn</span></div>
-        <div class="field"><label for="k-org">Organisation <span class="opt">(valgfri)</span></label><input id="k-org" name="org" type="text" autocomplete="organization"></div>
-        <div class="field"><label for="k-mail">E-mail</label><input id="k-mail" name="mail" type="email" required autocomplete="email"><span class="err">Skriv en gyldig e-mail</span></div>
-        <div class="field"><label for="k-tel">Telefon <span class="opt">(valgfri)</span></label><input id="k-tel" name="tel" type="tel" inputmode="tel" autocomplete="tel"></div>
-        <div class="field full"><label for="k-emne">Emne</label><select id="k-emne" name="emne"><option>Bestilling af vikar</option><option>Ydelse efter Barnets Lov</option><option>Ydelse efter Serviceloven</option><option>Job som vikar</option><option>Andet</option></select></div>
-        <div class="field full"><label for="k-msg">Besked</label><textarea id="k-msg" name="msg" rows="6" required></textarea><span class="err">Skriv en besked</span></div>
-        <div class="check full"><input type="checkbox" id="k-gdpr" required><label for="k-gdpr">Jeg accepterer, at HjerteVikar behandler mine oplysninger i henhold til <a href="#">privatlivspolitikken</a>.</label></div>
+        <div class="field"><label for="k-name">Navn</label><input id="k-name" name="Navn" type="text" required autocomplete="name"><span class="err">Skriv dit navn</span></div>
+        <div class="field"><label for="k-org">Organisation <span class="opt">(valgfri)</span></label><input id="k-org" name="Organisation" type="text" autocomplete="organization"></div>
+        <div class="field"><label for="k-mail">E-mail</label><input id="k-mail" name="email" type="email" required autocomplete="email"><span class="err">Skriv en gyldig e-mail</span></div>
+        <div class="field"><label for="k-tel">Telefon <span class="opt">(valgfri)</span></label><input id="k-tel" name="Telefon" type="tel" inputmode="tel" autocomplete="tel"></div>
+        <div class="field full"><label for="k-emne">Emne</label><select id="k-emne" name="Emne"><option>Bestilling af vikar</option><option>Ydelse efter Barnets Lov</option><option>Ydelse efter Serviceloven</option><option>Job som vikar</option><option>Andet</option></select></div>
+        <div class="field full"><label for="k-msg">Besked</label><textarea id="k-msg" name="Besked" rows="6" required></textarea><span class="err">Skriv en besked</span></div>
+        <div class="check full"><input type="checkbox" id="k-gdpr" name="Samtykke" value="ja" required><label for="k-gdpr">Jeg accepterer, at HjerteVikar behandler mine oplysninger i henhold til <a href="#">privatlivspolitikken</a>.</label></div>
       </div>
       <button class="btn btn-coral btn-lg" type="submit">Send besked <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></button>
-      <p class="form-success" role="status" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg><span>Tak for din besked! Vi vender tilbage hurtigst muligt.</span></p>
+      <p class="form-success" role="status" tabindex="-1"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg><span>Tak for din besked! Vi vender tilbage hurtigst muligt.</span></p><p class="form-error" role="alert" hidden>Beskeden kunne ikke sendes. Prøv igen, eller ring på <a href="tel:+4522228790">22 22 87 90</a>.</p>
     </form>
     <aside class="side">
       <div class="side-card map-card">

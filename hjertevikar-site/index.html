@@ -75,21 +75,22 @@
         </div>
       </div>
 
-      <form class="form-card js-form" id="bestil" aria-labelledby="h-form" novalidate>
+      <form class="form-card js-form" id="bestil" aria-labelledby="h-form" data-subject="Hurtig vikarbestilling (forside) – HjerteVikar" novalidate>
         <h2 id="h-form">Bestil en vikar</h2>
         <p class="sub">Udfyld på 30 sekunder – vi vender tilbage hurtigst muligt.</p>
-        <div class="field"><label for="f-inst">Institution / kommune</label><input id="f-inst" name="inst" autocomplete="organization" required><span class="err">Skriv navnet på institutionen</span></div>
+        <div class="field"><label for="f-inst">Institution / kommune</label><input id="f-inst" name="Institution / kommune" autocomplete="organization" required><span class="err">Skriv navnet på institutionen</span></div>
         <div class="row">
           <div class="field"><label for="f-type">Målgruppe</label>
-            <select id="f-type" name="type"><option>Børn og unge</option><option>Voksne med handicap</option><option>Psykiatri og misbrug</option><option>Andet</option></select></div>
-          <div class="field"><label for="f-date">Hvornår?</label><input id="f-date" name="date" type="date"></div>
+            <select id="f-type" name="Målgruppe"><option>Børn og unge</option><option>Voksne med handicap</option><option>Psykiatri og misbrug</option><option>Andet</option></select></div>
+          <div class="field"><label for="f-date">Hvornår?</label><input id="f-date" name="Hvornår" type="date"></div>
         </div>
         <div class="row">
-          <div class="field"><label for="f-name">Kontaktperson</label><input id="f-name" name="name" autocomplete="name" required><span class="err">Skriv dit navn</span></div>
-          <div class="field"><label for="f-tel">Telefon</label><input id="f-tel" name="tel" type="tel" inputmode="tel" autocomplete="tel" pattern="[0-9 +]{8,}" required><span class="err">Mindst 8 cifre</span></div>
+          <div class="field"><label for="f-name">Kontaktperson</label><input id="f-name" name="Kontaktperson" autocomplete="name" required><span class="err">Skriv dit navn</span></div>
+          <div class="field"><label for="f-tel">Telefon</label><input id="f-tel" name="Telefon" type="tel" inputmode="tel" autocomplete="tel" pattern="[0-9 +]{8,}" required><span class="err">Mindst 8 cifre</span></div>
         </div>
         <button class="btn btn-coral" type="submit">Send forespørgsel <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></button>
         <p class="form-success" role="status" tabindex="-1"><svg aria-hidden="true"><use href="#i-check"/></svg><span>Tak! Vi har modtaget jeres forespørgsel og ringer jer op hurtigst muligt.</span></p>
+        <p class="form-error" role="alert" hidden>Beskeden kunne ikke sendes. Prøv igen, eller ring på <a href="tel:+4522228790">22 22 87 90</a>.</p>
         <p class="form-foot"><a href="bestil-vikar.html">Uddybende bestilling</a> &nbsp;·&nbsp; <svg aria-hidden="true"><use href="#i-lock"/></svg>Akut? Ring direkte på <a href="tel:+4522228790"><b>22 22 87 90</b></a></p>
       </form>
     </div>
