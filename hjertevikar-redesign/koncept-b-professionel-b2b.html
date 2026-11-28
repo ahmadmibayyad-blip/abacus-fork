@@ -65,6 +65,18 @@
   .btn-outline:hover{border-color:var(--ink)}
   .menu-btn{display:none;width:48px;height:48px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;cursor:pointer;align-items:center;justify-content:center}
   @media (max-width:1080px){nav.main{display:none}.menu-btn{display:inline-flex}}
+  .drawer{background:var(--navy-950);border-top:1px solid rgba(255,255,255,.08);padding:8px 16px 20px}
+  .drawer ul{list-style:none}
+  .drawer a:not(.btn){display:block;padding:14px 8px;color:#E3EAF3;text-decoration:none;font-weight:600;font-size:17px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .drawer .btn{width:100%;margin-top:16px}
+  @media (min-width:1081px){.drawer{display:none!important}}
+  .form-success{display:none;align-items:flex-start;gap:12px;padding:16px;border-radius:10px;background:#E6F6F3;color:#0B5F55;font-weight:600;font-size:15px;margin-top:14px}
+  .form-success svg{width:22px;height:22px;flex:none}
+  .form-card.sent .form-success{display:flex}
+  .form-card.sent .field,.form-card.sent .row,.form-card.sent button{display:none}
+  .field input:user-invalid,.tried .field input:invalid{border-color:var(--coral)}
+  .err{font-size:13px;color:var(--coral-700);font-weight:600;display:none}
+  .field input:user-invalid + .err,.tried .field input:invalid + .err{display:block}
   @media (max-width:640px){.phone span{display:none}.hdr-right .btn{display:none}}
 
   /* Hero */
@@ -271,9 +283,20 @@
     <div class="hdr-right">
       <a class="phone" href="tel:+4522228790"><span class="ring"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg></span><span>Akut vikar<b>22 22 87 90</b></span></a>
       <a class="btn btn-coral" href="#bestil">Bestil vikar</a>
-      <button class="menu-btn" aria-label="Åbn menu"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <button class="menu-btn" aria-label="Åbn menu" aria-expanded="false" aria-controls="drawer"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
   </div>
+  <nav class="drawer" id="drawer" aria-label="Mobilmenu" hidden>
+    <ul>
+      <li><a href="#ydelser">Ydelser</a></li>
+      <li><a href="#malgrupper">Målgrupper</a></li>
+      <li><a href="#omraade">Dækningsområde</a></li>
+      <li><a href="#bliv-vikar">Bliv vikar</a></li>
+      <li><a href="#om">Om os</a></li>
+      <li><a href="#kontakt">Kontakt</a></li>
+    </ul>
+    <a class="btn btn-coral" href="#bestil">Bestil vikar</a>
+  </nav>
 </header>
 
 <main id="main">
@@ -295,20 +318,21 @@
         </div>
       </div>
 
-      <form class="form-card" id="bestil" aria-labelledby="h-form" onsubmit="event.preventDefault();this.querySelector('button').textContent='Tak – vi ringer dig op ✓'">
+      <form class="form-card" id="bestil" aria-labelledby="h-form" novalidate>
         <h2 id="h-form">Bestil en vikar</h2>
         <p class="sub">Udfyld på 30 sekunder – vi vender tilbage hurtigst muligt.</p>
-        <div class="field"><label for="f-inst">Institution / kommune</label><input id="f-inst" name="inst" autocomplete="organization" required></div>
+        <div class="field"><label for="f-inst">Institution / kommune</label><input id="f-inst" name="inst" autocomplete="organization" required><span class="err">Skriv navnet på institutionen</span></div>
         <div class="row">
           <div class="field"><label for="f-type">Målgruppe</label>
             <select id="f-type" name="type"><option>Børn og unge</option><option>Voksne med handicap</option><option>Psykiatri og misbrug</option><option>Andet</option></select></div>
           <div class="field"><label for="f-date">Hvornår?</label><input id="f-date" name="date" type="date"></div>
         </div>
         <div class="row">
-          <div class="field"><label for="f-name">Kontaktperson</label><input id="f-name" name="name" autocomplete="name" required></div>
-          <div class="field"><label for="f-tel">Telefon</label><input id="f-tel" name="tel" type="tel" inputmode="tel" autocomplete="tel" required></div>
+          <div class="field"><label for="f-name">Kontaktperson</label><input id="f-name" name="name" autocomplete="name" required><span class="err">Skriv dit navn</span></div>
+          <div class="field"><label for="f-tel">Telefon</label><input id="f-tel" name="tel" type="tel" inputmode="tel" autocomplete="tel" pattern="[0-9 +]{8,}" required><span class="err">Mindst 8 cifre</span></div>
         </div>
         <button class="btn btn-coral" type="submit">Send forespørgsel <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+        <p class="form-success" role="status" tabindex="-1"><svg aria-hidden="true"><use href="#i-check"/></svg><span>Tak! Vi har modtaget jeres forespørgsel og ringer jer op hurtigst muligt.</span></p>
         <p class="form-foot"><svg aria-hidden="true"><use href="#i-lock"/></svg>Akut? Ring direkte på <a href="tel:+4522228790"><b>22 22 87 90</b></a></p>
       </form>
     </div>
@@ -509,5 +533,20 @@
   <a class="btn btn-navy" href="tel:+4522228790"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg>Ring nu</a>
   <a class="btn btn-coral" href="#bestil">Bestil vikar</a>
 </div>
+<script>
+  // Mobilmenu
+  const mb=document.querySelector('.menu-btn'),dr=document.getElementById('drawer');
+  const setMenu=o=>{dr.hidden=!o;mb.setAttribute('aria-expanded',o);mb.setAttribute('aria-label',o?'Luk menu':'Åbn menu')};
+  mb.addEventListener('click',()=>setMenu(dr.hidden));
+  dr.addEventListener('click',e=>{if(e.target.closest('a'))setMenu(false)});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!dr.hidden){setMenu(false);mb.focus()}});
+  // Bestillingsformular (demo – skal kobles til mail/CRM)
+  const f=document.getElementById('bestil');
+  f.addEventListener('submit',e=>{
+    e.preventDefault();
+    if(!f.checkValidity()){f.classList.add('tried');f.querySelector('input:invalid').focus();return}
+    f.classList.add('sent');f.querySelector('.form-success').focus();
+  });
+</script>
 </body>
 </html>
